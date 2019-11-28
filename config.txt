@@ -1,0 +1,109 @@
+network.size 10
+random.seed 123
+simulation.endtime 50000000
+
+init.i Initialization
+
+protocol.position PositionProtocolImpl
+protocol.position.maxspeed 100
+protocol.position.minspeed 20
+protocol.position.width 1000
+protocol.position.height 800
+protocol.position.pause 0
+
+fullrandom FullRandom
+fullrandom.positionprotocol position
+
+control.gmonitor GraphicalMonitor
+control.gmonitor.time_slow 0.002
+control.gmonitor.step 1
+control.gmonitor.from 0
+control.gmonitor.positionprotocol position
+control.gmonitor.emitter emitter
+
+initial_position_strategy FullRandom
+initial_position_strategy.positionprotocol position
+
+next_destination_strategy FullRandom
+next_destination_strategy.positionprotocol position
+
+protocol.emitter EmitterImpl
+protocol.emitter.latency 0
+protocol.emitter.variance 0
+protocol.emitter.scope 50
+protocol.emitter.positionprotocol position
+
+
+
+#####################NEIGHBORS####################################
+
+
+#fullrandom FullRandom
+#fullrandom.positionprotocol posprotocol
+
+
+#
+#control.gmonitor.emitter emitter
+#control.gmonitor.neighborprotocol neighborprotocol
+# control.gmonitor.monitorableprotocol 
+
+
+#########################################################
+
+
+#protocol.vkt04statique VKT04Statique
+#protocol.vkt04statique.position posprotocol
+#protocol.vkt04statique.emitter emitter
+
+
+
+#protocol.posprotocol PositionProtocolImpl
+#protocol.posprotocol.maxspeed 100
+#protocol.posprotocol.minspeed 20
+#protocol.posprotocol.width 1000
+#protocol.posprotocol.height 800
+#protocol.posprotocol.pause 0
+
+#protocol.emitter PositionEmitter
+#protocol.emitter.latency 0
+#protocol.emitter.deviation 0
+#protocol.emitter.scope 100
+#protocol.emitter.positionprotocol posprotocol
+
+#posconfig PositioningConfiguration
+#posconfig.seed_positionning 0
+
+
+#iprc InitialPositionRandomConnected
+"iprc.positionprotocol posprotocol
+#iprc.emitter emitter
+#iprc.distance_init_min 0
+#iprc.distance_init_max 50
+
+
+
+
+
+# protocol.connectedrandom ConnectedRandom
+# protocol.connectedrandom.emitter TBD
+
+# ndrpi NextDestinationRandomPeriodicInitial
+# ndrpi.random_dest_period TBD
+
+# ndimmo NextDestinationImmobility
+# ndimmo.positionprotocol TBD
+
+# ndcom NextDestinationConnectedOneMove
+# ndcom.positionprotocol TBD
+# ndcom.emitter TBD
+# ndcom.distance_min TBD
+# ndcom.distance_max TBD
+
+
+
+# ipcr InitialPositionConnectedRing
+# ipcr.positionprotocol TBD
+# ipcr.emitter TBD
+
+
+
