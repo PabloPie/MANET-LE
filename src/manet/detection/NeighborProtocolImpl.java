@@ -2,7 +2,6 @@ package manet.detection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import manet.communication.EmitterImpl;
@@ -16,10 +15,12 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 	
 	private static final String PAR_HEARTBEATPERIOD = "heartbeat_period";
 	private static final String PAR_NEIGHBOR_TIMER = "neighbor_timer";
+	private static final String PAR_NEIGHBOR_LISTENER = "neighborListener";
 	public static final String loop_event = "LOOPEVENT";
 	
 	private final int neighbor_timer;
 	private final int heartbeat_period;
+	private final int pidProtocolNeighborListener;
 	private Map<Long, Integer> neighbors;
 	private int myPid;
 
@@ -30,6 +31,7 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
 		this.neighbor_timer = Configuration.getInt(prefix + "." + PAR_NEIGHBOR_TIMER);
 		this.heartbeat_period = Configuration.getInt(prefix + "." + PAR_HEARTBEATPERIOD);
+		this.pidProtocolNeighborListener = Configuration.getPid(PAR_NEIGHBOR_LISTENER, -1); // no Listener -> -1
 		this.neighbors = new ConcurrentHashMap<>();
 	}
 	
@@ -53,17 +55,28 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 			}
 			
 			// Mise à jour des timers des voisins
-			for(Long id : this.neighbors.keySet()) {
+			for (Long id : this.neighbors.keySet()) {
 				int timer = this.neighbors.get(id);
-				if(timer == 1) this.neighbors.remove(id);
+				if (timer == 0){
+					this.neighbors.remove(id);
+					if (pidProtocolNeighborListener != -1)
+						EDSimulator.add(0, "REMOVENEIGHBOR", node, pidProtocolNeighborListener);
+				}
 				else this.neighbors.put(id, timer - 1);
 			}
 
 			EDSimulator.add(1, loop_event, node, myPid);
 		}
 		else if(event instanceof ProbeMessage) {
+			ProbeMessage msg = (ProbeMessage) event;
+			// We don't want the node to add itself to its neighbor list
+			if (msg.getIdSrc() == node.getID()) return;
+			// New neighbor means we notify the Listener
+			if (!neighbors.containsKey(msg.getIdSrc()) && pidProtocolNeighborListener != -1){
+				EDSimulator.add(0, "NEWNEIGHBOR", node, pidProtocolNeighborListener);
+			}
 			// On ajoute ou met à jour le voisin et son timer
-			this.neighbors.put( ((ProbeMessage)event).getIdSrc(), neighbor_timer );
+			this.neighbors.put(msg.getIdSrc(), neighbor_timer );
 		}
 	}
 
