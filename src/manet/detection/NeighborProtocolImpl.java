@@ -69,7 +69,6 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 
 	@Override
 	public final List<Long> getNeighbors() {
-		Set<Long> test = this.neighbors.keySet();
-		return new ArrayList<Long>(test);
+		return new ArrayList<Long>(this.neighbors.keySet());
 	}
 }

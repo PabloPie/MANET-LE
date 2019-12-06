@@ -203,7 +203,6 @@ public class GraphicalMonitor extends JPanel implements Control {
 			if (neighbor_pid != -1) {
 				NeighborProtocol neighb = (NeighborProtocol) n.getProtocol(neighbor_pid);
 				Long[] neighbors = new Long[neighb.getNeighbors().size()];
-				System.out.println("FUUUUUUUUUCK");
 				neighbors = neighb.getNeighbors().toArray(neighbors);
 				for (Long id : neighbors) {
 					Node neighbor = getNodefromId(id);
