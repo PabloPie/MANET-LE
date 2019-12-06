@@ -16,11 +16,11 @@ public class EmitterImpl implements Emitter {
 	private static final String PAR_SCOPE = "scope";
 	private static final String PAR_POSITION = "position";
 	
-	public final int myPid;
-	public final int latency;
-	public final boolean variance;
-	public final int scope;
-	public final int posprotocol;
+	private final int myPid;
+	private final int latency;
+	private final boolean variance;
+	private final int scope;
+	private final int posprotocol;
 	
 	public EmitterImpl(String prefix)
 	{
@@ -43,7 +43,6 @@ public class EmitterImpl implements Emitter {
 
 	@Override
 	public void processEvent(Node node, int pid, Object event) {
-		System.out.println("processEvent dans EmmiterImpl");
 		if(event instanceof Message) {
 			Message msg = (Message) event;
 			PositionProtocol positionSrc = (PositionProtocol) Network.get((int) msg.getIdSrc()).getProtocol(posprotocol);
@@ -58,8 +57,6 @@ public class EmitterImpl implements Emitter {
 
 	@Override
 	public void emit(Node host, Message msg) {
-
-		System.out.println("emit dans EmmiterImpl");
 		int latency = this.latency;
 		for(int i = 0 ; i<Network.size();i++) {
 			if(this.variance) latency = CommonState.r.nextPoisson(this.latency);

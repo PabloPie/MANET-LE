@@ -19,6 +19,7 @@ control.gmonitor.time_slow 0.002
 control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
+control.gmonitor.neighborprotocol neighbors
 control.gmonitor.emitter emitter
 
 initial_position_strategy FullRandom
@@ -33,6 +34,10 @@ protocol.emitter.variance 0
 protocol.emitter.scope 50
 protocol.emitter.positionprotocol position
 
+protocol.neighbors NeighborProtocolImpl
+protocol.neighbors.heartbeat_period 12
+protocol.neighbors.neighbor_timer 10
+
 
 
 #####################NEIGHBORS####################################
@@ -42,9 +47,9 @@ protocol.emitter.positionprotocol position
 #fullrandom.positionprotocol posprotocol
 
 
-#
+#System.out.println(+node.getID());
 #control.gmonitor.emitter emitter
-#control.gmonitor.neighborprotocol neighborprotocol
+#
 # control.gmonitor.monitorableprotocol 
 
 
