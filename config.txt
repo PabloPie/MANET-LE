@@ -11,8 +11,25 @@ protocol.position.width 1000
 protocol.position.height 800
 protocol.position.pause 0
 
+################# Strategies #######################
 fullrandom FullRandom
 fullrandom.positionprotocol position
+
+connectedrandom ConnectedRandom
+connectedrandom.positionprotocol position
+connectedrandom.emitter emitter
+
+initialrandom InitialPositionRandomConnected
+initialrandom.positionprotocol position
+initialrandom.emitter emitter
+
+nextconnected NextDestinationConnectedOneMove
+nextconnected.positionprotocol position
+nextconnected.distance_min 0
+nextconnected.distance_max 1
+nextconnected.emitter emitter
+
+#####################################################
 
 control.gmonitor GraphicalMonitor
 control.gmonitor.time_slow 0.002
@@ -22,11 +39,13 @@ control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
 control.gmonitor.emitter emitter
 
-initial_position_strategy FullRandom
+initial_position_strategy InitialPositionRandomConnected
 initial_position_strategy.positionprotocol position
+initial_position_strategy.emitter emitter
 
-next_destination_strategy FullRandom
+next_destination_strategy NextDestinationConnectedOneMove
 next_destination_strategy.positionprotocol position
+next_destination_strategy.emitter emitter
 
 protocol.emitter EmitterImpl
 protocol.emitter.latency 0
@@ -37,6 +56,8 @@ protocol.emitter.positionprotocol position
 protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 12
 protocol.neighbors.neighbor_timer 10
+
+#protocol.neighborL
 
 
 
