@@ -48,10 +48,9 @@ public class EmitterImpl implements Emitter {
 			PositionProtocol positionSrc = (PositionProtocol) Network.get((int) msg.getIdSrc()).getProtocol(posprotocol);
 			PositionProtocol positionDest = (PositionProtocol) node.getProtocol(posprotocol);
 			
-			if((msg.getIdDest() == Emitter.ALL || msg.getIdDest() == node.getID()) && positionSrc.getCurrentPosition().distance(positionDest.getCurrentPosition()) <= this.scope) {
-				EDProtocol p = (EDProtocol) node.getProtocol(msg.getPid());
-				p.processEvent(node, msg.getPid(), event);
-			}
+			if((msg.getIdDest() == Emitter.ALL || msg.getIdDest() == node.getID())
+					&& positionSrc.getCurrentPosition().distance(positionDest.getCurrentPosition()) <= this.scope)
+				EDSimulator.add(0, event, node, msg.getPid());
 		}
 	}
 
