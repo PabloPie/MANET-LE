@@ -78,7 +78,7 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 			// New neighbor means we notify the Listener
 			if (!neighbors.containsKey(msg.getIdSrc()) && pidProtocolNeighborListener != -1){
 				NeighborhoodListener p = (NeighborhoodListener) node.getProtocol(pidProtocolNeighborListener);
-				p.lostNeighborDetected(node, msg.getIdSrc());
+				p.newNeighborDetected(node, msg.getIdSrc());
 			}
 			// On ajoute ou met à jour le voisin et son timer
 			this.neighbors.put(msg.getIdSrc(), neighbor_timer );
