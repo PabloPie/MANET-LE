@@ -7,7 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import manet.communication.EmitterImpl;
 import peersim.config.Configuration;
 import peersim.core.CommonState;
+import peersim.core.Network;
 import peersim.core.Node;
+import peersim.core.Protocol;
 import peersim.edsim.EDSimulator;
 import util.ProbeMessage;
 
@@ -16,7 +18,7 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 	private static final String PAR_HEARTBEATPERIOD = "heartbeat_period";
 	private static final String PAR_NEIGHBOR_TIMER = "neighbor_timer";
 	private static final String PAR_NEIGHBOR_LISTENER = "neighborListener";
-	public static final String loop_event = "LOOPEVENT";
+	private static final String loop_event = "LOOPEVENT";
 	
 	private final int neighbor_timer;
 	private final int heartbeat_period;
@@ -59,8 +61,10 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 				int timer = this.neighbors.get(id);
 				if (timer == 0){
 					this.neighbors.remove(id);
-					if (pidProtocolNeighborListener != -1)
-						EDSimulator.add(0, "REMOVENEIGHBOR", node, pidProtocolNeighborListener);
+					if (pidProtocolNeighborListener != -1) {
+						NeighborhoodListener p = (NeighborhoodListener) node.getProtocol(pidProtocolNeighborListener);
+						p.lostNeighborDetected(node, id);
+					}
 				}
 				else this.neighbors.put(id, timer - 1);
 			}
@@ -73,7 +77,8 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 			if (msg.getIdSrc() == node.getID()) return;
 			// New neighbor means we notify the Listener
 			if (!neighbors.containsKey(msg.getIdSrc()) && pidProtocolNeighborListener != -1){
-				EDSimulator.add(0, "NEWNEIGHBOR", node, pidProtocolNeighborListener);
+				NeighborhoodListener p = (NeighborhoodListener) node.getProtocol(pidProtocolNeighborListener);
+				p.lostNeighborDetected(node, msg.getIdSrc());
 			}
 			// On ajoute ou met à jour le voisin et son timer
 			this.neighbors.put(msg.getIdSrc(), neighbor_timer );
