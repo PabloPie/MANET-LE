@@ -26,4 +26,12 @@ public class Edit {
         public void addAdded(long nodeid, int value){
                 added.putIfAbsent(nodeid, value);
         }
+
+        public void setRemoved(Map<Long, Integer> removed) {
+                this.removed = removed;
+        }
+
+        public void setAdded(Map<Long, Integer> added) {
+                this.added = added;
+        }
 }

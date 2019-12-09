@@ -15,6 +15,8 @@ import util.globalview.KnowledgeMessage;
 import util.globalview.View;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener {
 
@@ -72,10 +74,10 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     public void lostNeighborDetected(Node host, long id_lost_neighbor) {
         Edit edit = new Edit(host.getID(), knowledge.get(myid).clock, knowledge.get(myid).clock+1);
         edit.addRemoved(id_lost_neighbor, knowledge.get(myid).getValue(id_lost_neighbor));
-        EditMessage editMsg = new EditMessage(host.getID(), Emitter.ALL, myPid, edit);
         knowledge.get(myid).removeNeighbor(id_lost_neighbor);
         knowledge.get(myid).clock++;
         Emitter e = (EmitterImpl) host.getProtocol(emitPid);
+        EditMessage editMsg = new EditMessage(host.getID(), Emitter.ALL, myPid, edit);
         e.emit(host, editMsg);
     }
 
@@ -106,16 +108,49 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         ArrayList<View> knowledgeJ = msg.getKnowledge();
         long j = msg.getIdSrc();
         ArrayList<Edit> edit = new ArrayList<>();
-        for(View v: knowledgeJ) {
-            //v.getNeighbors().forEach((id, val) ->
-                   //IF KNOWLEDGE[p] is empty);
+        // for every node
+        for (int id = 0; id < knowledgeJ.size(); id++) {
+            View peer = knowledgeJ.get(id);
+            if (knowledge.get(id).clock == -1) {
+                // e <- {<p,p.neighbors,-,0,p.clock>}
+                Edit e = new Edit(id, 0, peer.clock);
+                e.setAdded(peer.getNeighbors());
+                edit.add(e);
+                knowledge.get(id).clock = peer.clock;
+                knowledge.get(id).setNeighbors(peer.getNeighbors());
+            } else if (peer.clock > knowledge.get(id).clock) {
+                //p.neighbors \ knowledge[p].neighbors
+                Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge.get(id).getNeighbors());
+                // knowledge[p].neighbors \ p.neighbors
+                Map<Long, Integer> removed = mapDifference(knowledge.get(id).getNeighbors(),peer.getNeighbors());
+                Edit e = new Edit(id, knowledge.get(id).clock, peer.clock);
+                e.setAdded(added);
+                e.setRemoved(removed);
+                edit.add(e);
+                knowledge.get(id).setNeighbors(peer.getNeighbors());
+                knowledge.get(id).clock = peer.clock;
+            }
         }
+        if (!edit.isEmpty()) {
+            Emitter e = (EmitterImpl) node.getProtocol(emitPid);
+            EditMessage editMsg = new EditMessage(node.getID(), Emitter.ALL, myPid, edit);
+            e.emit(node, editMsg);
+        }
+    }
+
+    // Returns a map that contains the values that are in map1 but not in map2
+    // XXX: should we also check the value? remove(key,value)
+    private Map<Long, Integer> mapDifference(Map<Long, Integer> map1, Map<Long, Integer> map2){
+        Map<Long, Integer> diff = new HashMap<Long, Integer>(map1);
+        for(Long id: map2.keySet()){
+            diff.remove(id);
+        }
+        return diff;
     }
 
     private void editReception(Node node, int pid, EditMessage msg) {
 
     }
-
 
     /*
      * GETTERS

@@ -23,7 +23,8 @@ public class View {
         return this.neighbors;
     }
 
-    public boolean containsPeer(long id){
-        return neighbors.containsKey(id);
+    public void setNeighbors(Map<Long, Integer> neighbors){
+        this.neighbors = neighbors;
     }
+
 }
