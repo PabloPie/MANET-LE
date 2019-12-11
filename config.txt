@@ -9,27 +9,7 @@ protocol.position.maxspeed 100
 protocol.position.minspeed 20
 protocol.position.width 1000
 protocol.position.height 800
-protocol.position.pause 0
-
-################# Strategies #######################
-fullrandom FullRandom
-fullrandom.positionprotocol position
-
-connectedrandom ConnectedRandom
-connectedrandom.positionprotocol position
-connectedrandom.emitter emitter
-
-initialrandom InitialPositionRandomConnected
-initialrandom.positionprotocol position
-initialrandom.emitter emitter
-
-nextconnected NextDestinationConnectedOneMove
-nextconnected.positionprotocol position
-nextconnected.distance_min 0
-nextconnected.distance_max 1
-nextconnected.emitter emitter
-
-#####################################################
+protocol.position.pause 1
 
 control.gmonitor GraphicalMonitor
 control.gmonitor.time_slow 0.002
@@ -39,97 +19,55 @@ control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
 control.gmonitor.emitter emitter
 
-initial_position_strategy InitialPositionRandomConnected
-initial_position_strategy.positionprotocol position
-initial_position_strategy.emitter emitter
-
-next_destination_strategy NextDestinationConnectedOneMove
-next_destination_strategy.positionprotocol position
-next_destination_strategy.emitter emitter
-
 protocol.emitter EmitterImpl
 protocol.emitter.latency 0
 protocol.emitter.variance 0
-protocol.emitter.scope 50
+protocol.emitter.scope 100
 protocol.emitter.positionprotocol position
 
 protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 12
 protocol.neighbors.neighbor_timer 10
+protocol.neighbors.emitter emitter
 
-#protocol.neighborL
+################# Strategies Initial #######################
 
+#initial_position_strategy FullRandom
+#initial_position_strategy.positionprotocol position
 
+#initial_position_strategy ConnectedRandom
+#initial_position_strategy.positionprotocol position
+#initial_position_strategy.emitter emitter
 
-#####################NEIGHBORS####################################
+#initial_position_strategy InitialPositionRandomConnected
+#initial_position_strategy.positionprotocol position
+#initial_position_strategy.emitter emitter
+#initial_position_strategy.distance_init_min 25
+#initial_position_strategy.distance_init_max 75
 
+initial_position_strategy InitialPositionConnectedRing
+initial_position_strategy.positionprotocol position
+initial_position_strategy.emitter emitter
 
-#fullrandom FullRandom
-#fullrandom.positionprotocol posprotocol
+################# Strategies Next #######################
 
+#next_destination_strategy FullRandom
+#next_destination_strategy.positionprotocol position
 
-#System.out.println(+node.getID());
-#control.gmonitor.emitter emitter
-#
-# control.gmonitor.monitorableprotocol 
+#next_destination_strategy ConnectedRandom
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.emitter emitter
 
+#next_destination_strategy NextDestinationConnectedOneMove
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.emitter emitter
+#next_destination_strategy.distance_min 15
+#next_destination_strategy.distance_max 45
 
-#########################################################
+next_destination_strategy NextDestinationImmobility
+next_destination_strategy.positionprotocol position
 
-
-#protocol.vkt04statique VKT04Statique
-#protocol.vkt04statique.position posprotocol
-#protocol.vkt04statique.emitter emitter
-
-
-
-#protocol.posprotocol PositionProtocolImpl
-#protocol.posprotocol.maxspeed 100
-#protocol.posprotocol.minspeed 20
-#protocol.posprotocol.width 1000
-#protocol.posprotocol.height 800
-#protocol.posprotocol.pause 0
-
-#protocol.emitter PositionEmitter
-#protocol.emitter.latency 0
-#protocol.emitter.deviation 0
-#protocol.emitter.scope 100
-#protocol.emitter.positionprotocol posprotocol
-
-#posconfig PositioningConfiguration
-#posconfig.seed_positionning 0
-
-
-#iprc InitialPositionRandomConnected
-"iprc.positionprotocol posprotocol
-#iprc.emitter emitter
-#iprc.distance_init_min 0
-#iprc.distance_init_max 50
-
-
-
-
-
-# protocol.connectedrandom ConnectedRandom
-# protocol.connectedrandom.emitter TBD
-
-# ndrpi NextDestinationRandomPeriodicInitial
-# ndrpi.random_dest_period TBD
-
-# ndimmo NextDestinationImmobility
-# ndimmo.positionprotocol TBD
-
-# ndcom NextDestinationConnectedOneMove
-# ndcom.positionprotocol TBD
-# ndcom.emitter TBD
-# ndcom.distance_min TBD
-# ndcom.distance_max TBD
-
-
-
-# ipcr InitialPositionConnectedRing
-# ipcr.positionprotocol TBD
-# ipcr.emitter TBD
-
-
+#next_destination_strategy NextDestinationRandomPeriodicInitial
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.random_dest_period 10
 

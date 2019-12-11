@@ -4,42 +4,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import manet.communication.EmitterImpl;
+import manet.communication.Emitter;
 import peersim.config.Configuration;
 import peersim.core.CommonState;
-import peersim.core.Network;
 import peersim.core.Node;
-import peersim.core.Protocol;
+import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
 import util.ProbeMessage;
 
-public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtocol {
+public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 	
 	private static final String PAR_HEARTBEATPERIOD = "heartbeat_period";
 	private static final String PAR_NEIGHBOR_TIMER = "neighbor_timer";
 	private static final String PAR_NEIGHBOR_LISTENER = "neighborListener";
+	private static final String PAR_EMITTERPID = "emitter";
 	private static final String loop_event = "LOOPEVENT";
 	
 	private final int neighbor_timer;
 	private final int heartbeat_period;
 	private final int pidProtocolNeighborListener;
+	private final int pidProtocolEmitter;
 	private Map<Long, Integer> neighbors;
 	private int myPid;
 
 
 	public NeighborProtocolImpl(String prefix) {
-		super("protocol.emitter");
 		String tmp[] = prefix.split("\\.");
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
 		this.neighbor_timer = Configuration.getInt(prefix + "." + PAR_NEIGHBOR_TIMER);
 		this.heartbeat_period = Configuration.getInt(prefix + "." + PAR_HEARTBEATPERIOD);
 		this.pidProtocolNeighborListener = Configuration.getPid(PAR_NEIGHBOR_LISTENER, -1); // no Listener -> -1
+		this.pidProtocolEmitter = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
 		this.neighbors = new ConcurrentHashMap<>();
 	}
 	
 	public Object clone() {
-		NeighborProtocolImpl res = (NeighborProtocolImpl) super.clone();
-		res.neighbors = new ConcurrentHashMap<>();
+		NeighborProtocolImpl res = null;
+		try {
+			res = (NeighborProtocolImpl) super.clone();
+		} catch (CloneNotSupportedException e) {
+		}
+		this.neighbors = new ConcurrentHashMap<>();
 		return res;
 	}
 	
@@ -53,7 +58,7 @@ public class NeighborProtocolImpl extends EmitterImpl implements NeighborProtoco
 			
 			// Heartbeat
 			if(CommonState.getTime()%heartbeat_period == 0) {
-				emit(node, new ProbeMessage(node.getID(), ALL, pid));
+				((Emitter) node.getProtocol(this.pidProtocolEmitter)).emit(node, new ProbeMessage(node.getID(), Emitter.ALL, pid));
 			}
 			
 			// Mise à jour des timers des voisins
