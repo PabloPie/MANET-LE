@@ -5,16 +5,26 @@
 *FullRandom*
 FullRandom attribue une position aléatoire à chaque noeud si c'est la stratégie initiale choisie et réalise un mouvement aléatoire si choisie comme stratégie pour le next.
 *ConnectedRandom*
+
 ConnectedRandom place les noeuds et les déplace de manière aléatoire mais de manière à ce qu'ils restent dans le même réseau.
+
 *InitalPositionRandomConnected*
+
 InitalPositionRandomConnected positionne initialement les noeuds de manière aléatoire mais de manière à ce qu'ils soient dans le même réseaux.
+
 *InitalPositionConnectedRing*
+
 InitalPositionConnectedRing positionne les noeuds en forme d'anneau où tous les noeuds sont dans le même réseau.
+
 *NextDestinationConnectedOneMove*
+
 NextDestinationConnectedOneMove déplace un seul noeud de manière à ce que celui-ci reste co
+
 *NextDestinationRandomPeriodicInitial*
+
 Les noeuds bougent de façon aléatoire mais revienne périodiquement (grâce au paramètre random_dest_period) à leur poisition initiale.
 *NextDestinationImmobility*
+
 Les noeuds ne bougent pas.
 ## Premier Algorithme
 ### Question 1
