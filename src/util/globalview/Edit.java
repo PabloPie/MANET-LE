@@ -34,4 +34,20 @@ public class Edit {
         public void setAdded(Map<Long, Integer> added) {
                 this.added = added;
         }
+
+        public Map<Long,Integer> getAdded(){
+                return added;
+        }
+
+        public Map<Long,Integer> getRemoved(){
+                return removed;
+        }
+
+        public boolean addedIsEmpty() {
+                return added.isEmpty();
+        }
+
+        public boolean removedIsEmpty() {
+                return removed.isEmpty();
+        }
 }

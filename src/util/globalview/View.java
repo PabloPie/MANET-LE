@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class View {
     public int clock;
+    //separate node -> value in a map, and set of neighbors?
     private Map<Long, Integer> neighbors = new HashMap<>();
 
     public void addNeighbor(long id, int value){

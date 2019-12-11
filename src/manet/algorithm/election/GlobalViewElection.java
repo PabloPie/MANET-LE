@@ -59,11 +59,15 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         }
         election.value = valueRandom.nextInt();
         election.knowledge = new ArrayList<View>();
+        for(View v: election.knowledge)
+            v.clock = -1;
         return election;
     }
 
     public void initSelfKnowledge(long id) {
         myid = (int) id;
+        for(View v: knowledge)
+            v.clock = -1;
         knowledge.get(myid).clock = 0;
         knowledge.get(myid).addNeighbor(id, this.value);
     }
@@ -119,10 +123,10 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 knowledge.get(id).clock = peer.clock;
                 knowledge.get(id).setNeighbors(peer.getNeighbors());
             } else if (peer.clock > knowledge.get(id).clock) {
-                //p.neighbors \ knowledge[p].neighbors
+                //p.neighbors \ knowledge[p].neighbors O(n2)?
                 Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge.get(id).getNeighbors());
                 // knowledge[p].neighbors \ p.neighbors
-                Map<Long, Integer> removed = mapDifference(knowledge.get(id).getNeighbors(),peer.getNeighbors());
+                Map<Long, Integer> removed = mapDifference(knowledge.get(id).getNeighbors(), peer.getNeighbors());
                 Edit e = new Edit(id, knowledge.get(id).clock, peer.clock);
                 e.setAdded(added);
                 e.setRemoved(removed);
@@ -149,7 +153,31 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     }
 
     private void editReception(Node node, int pid, EditMessage msg) {
+        boolean updated = false;
+        for(Edit e: msg.getEdit()){
+            if (!e.addedIsEmpty()) {
+                if (knowledge.get((int) e.nodeid).clock == -1) {
+                    if (e.oldclock == 0) {
+                        updated = true;
+                        knowledge.get((int) e.nodeid).setNeighbors(e.getAdded());
+                    }
+                } else if (e.oldclock == knowledge.get((int) e.nodeid).clock) {
+                    updated = true;
+                    knowledge.get((int) e.nodeid).getNeighbors().putAll(e.getAdded());
+                }
+            }
 
+            if (!e.removedIsEmpty()) {
+                if (knowledge.get((int)e.nodeid).clock == e.oldclock) {
+                    updated = true;
+                        for (Long id: e.getRemoved().keySet())
+                            knowledge.get((int)e.nodeid).removeNeighbor(id);
+                    }
+                }
+            }
+        if (!updated) return;
+        Emitter e = (EmitterImpl) node.getProtocol(emitPid);
+        e.emit(node, msg);
     }
 
     /*
