@@ -2,7 +2,8 @@ network.size 10
 random.seed 123
 simulation.endtime 50000000
 
-init.i Initialization
+#init.i util.Initialization
+init.t util.InitializationVKT04Statique
 
 protocol.position PositionProtocolImpl
 protocol.position.maxspeed 100
@@ -23,12 +24,15 @@ protocol.emitter EmitterImpl
 protocol.emitter.latency 0
 protocol.emitter.variance 0
 protocol.emitter.scope 100
-protocol.emitter.positionprotocol position
 
-protocol.neighbors NeighborProtocolImpl
-protocol.neighbors.heartbeat_period 12
-protocol.neighbors.neighbor_timer 10
+#protocol.neighbors NeighborProtocolImpl
+#protocol.neighbors.heartbeat_period 12
+#protocol.neighbors.neighbor_timer 10
+#protocol.neighbors.emitter emitter
+
+protocol.neighbors VKT04Statique
 protocol.neighbors.emitter emitter
+protocol.neighbors.position position
 
 ################# Strategies Initial #######################
 
