@@ -8,11 +8,14 @@ import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Initialization implements Control {
 	private static final String PAR_PROTO = "protocol";
 	private final int pidProtocolPosition;
 	private final int pidProtocolNeighbor;
-//	private final int pidProtocolGlobalView;
+	private final int pidProtocolGlobalView;
 
 	public static final String loop_event = "LOOPEVENT";
 
@@ -20,7 +23,7 @@ public class Initialization implements Control {
 	public Initialization(String prefix) {
 		pidProtocolPosition = Configuration.lookupPid("position");
 		pidProtocolNeighbor = Configuration.lookupPid("neighbors");
-//		pidProtocolGlobalView = Configuration.lookupPid("globalviewelection");
+		pidProtocolGlobalView = Configuration.lookupPid("globalviewelection");
 	}
 
 	@Override
@@ -28,8 +31,8 @@ public class Initialization implements Control {
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
 
-//			GlobalViewElection election = (GlobalViewElection) node.getProtocol(pidProtocolGlobalView);
-//			election.initSelfKnowledge(node.getID());
+			GlobalViewElection election = (GlobalViewElection) node.getProtocol(pidProtocolGlobalView);
+			election.initSelfKnowledge(node.getID());
 
 			PositionProtocol pos = (PositionProtocol) node.getProtocol(pidProtocolPosition);
 			pos.initialiseCurrentPosition(node);

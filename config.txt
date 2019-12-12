@@ -1,4 +1,4 @@
-network.size 10
+network.size 5
 random.seed 123
 simulation.endtime 50000000
 
@@ -17,6 +17,7 @@ control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
+control.gmonitor.monitorableprotocol globalviewelection
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
@@ -26,14 +27,21 @@ protocol.emitter.scope 100
 protocol.emitter.positionprotocol position
 
 protocol.neighbors NeighborProtocolImpl
-protocol.neighbors.heartbeat_period 12
-protocol.neighbors.neighbor_timer 10
+protocol.neighbors.heartbeat_period 1
+protocol.neighbors.neighbor_timer 50
+protocol.neighbors.neighborListener globalviewelection
 protocol.neighbors.emitter emitter
+
+protocol.globalviewelection GlobalViewElection
+protocol.globalviewelection.emitterprotocol emitter
+protocol.globalviewelection.neighborprotocol neighbors
+protocol.globalviewelection.seed_value 987
+
 
 ################# Strategies Initial #######################
 
-#initial_position_strategy FullRandom
-#initial_position_strategy.positionprotocol position
+initial_position_strategy FullRandom
+initial_position_strategy.positionprotocol position
 
 #initial_position_strategy ConnectedRandom
 #initial_position_strategy.positionprotocol position
@@ -45,18 +53,18 @@ protocol.neighbors.emitter emitter
 #initial_position_strategy.distance_init_min 25
 #initial_position_strategy.distance_init_max 75
 
-initial_position_strategy InitialPositionConnectedRing
-initial_position_strategy.positionprotocol position
-initial_position_strategy.emitter emitter
+#initial_position_strategy InitialPositionConnectedRing
+#initial_position_strategy.positionprotocol position
+#initial_position_strategy.emitter emitter
 
 ################# Strategies Next #######################
 
 #next_destination_strategy FullRandom
 #next_destination_strategy.positionprotocol position
 
-#next_destination_strategy ConnectedRandom
-#next_destination_strategy.positionprotocol position
-#next_destination_strategy.emitter emitter
+next_destination_strategy ConnectedRandom
+next_destination_strategy.positionprotocol position
+next_destination_strategy.emitter emitter
 
 #next_destination_strategy NextDestinationConnectedOneMove
 #next_destination_strategy.positionprotocol position
@@ -64,8 +72,8 @@ initial_position_strategy.emitter emitter
 #next_destination_strategy.distance_min 15
 #next_destination_strategy.distance_max 45
 
-next_destination_strategy NextDestinationImmobility
-next_destination_strategy.positionprotocol position
+#next_destination_strategy NextDestinationImmobility
+#next_destination_strategy.positionprotocol position
 
 #next_destination_strategy NextDestinationRandomPeriodicInitial
 #next_destination_strategy.positionprotocol position

@@ -6,14 +6,14 @@ import java.util.ArrayList;
 
 public class KnowledgeMessage extends Message {
 
-    private ArrayList<View> knowledge;
+    private View[] knowledge;
 
-    public KnowledgeMessage(long idsrc, long iddest, int pid, ArrayList<View> knowledge){
+    public KnowledgeMessage(long idsrc, long iddest, int pid, View[] knowledge){
         super(idsrc, iddest, pid);
         this.knowledge = knowledge;
     }
 
-    public ArrayList<View> getKnowledge(){
+    public View[] getKnowledge(){
         return this.knowledge;
     }
 }
