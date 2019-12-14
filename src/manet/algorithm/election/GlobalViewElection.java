@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener {
+public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener, ElectionInit {
 
 
     // Protocol configuration variables
@@ -60,11 +60,10 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             e.printStackTrace();
         }
         election.knowledge = new View[Network.size()];
-//        election.value = valueRandom.nextInt()%1000;
         return election;
     }
 
-    public void initSelfKnowledge(long id) {
+    public void initializeValues(long id) {
         myid = (int) id;
 //        this.value= valueRandom.nextInt() %1000;
         this.value = myid;

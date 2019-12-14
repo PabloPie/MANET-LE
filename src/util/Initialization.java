@@ -1,4 +1,5 @@
 package util;
+import manet.algorithm.election.ElectionInit;
 import manet.algorithm.election.GlobalViewElection;
 import manet.detection.NeighborProtocol;
 import manet.positioning.PositionProtocol;
@@ -15,7 +16,7 @@ public class Initialization implements Control {
 	private static final String PAR_PROTO = "protocol";
 	private final int pidProtocolPosition;
 	private final int pidProtocolNeighbor;
-	private final int pidProtocolGlobalView;
+	private final int pidProtocolElection;
 
 	public static final String loop_event = "LOOPEVENT";
 
@@ -23,7 +24,7 @@ public class Initialization implements Control {
 	public Initialization(String prefix) {
 		pidProtocolPosition = Configuration.lookupPid("position");
 		pidProtocolNeighbor = Configuration.lookupPid("neighbors");
-		pidProtocolGlobalView = Configuration.lookupPid("globalviewelection");
+		pidProtocolElection = Configuration.lookupPid("election");
 	}
 
 	@Override
@@ -31,8 +32,8 @@ public class Initialization implements Control {
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
 
-			GlobalViewElection election = (GlobalViewElection) node.getProtocol(pidProtocolGlobalView);
-			election.initSelfKnowledge(node.getID());
+			ElectionInit election = (ElectionInit) node.getProtocol(pidProtocolElection);
+			election.initializeValues(node.getID());
 
 			PositionProtocol pos = (PositionProtocol) node.getProtocol(pidProtocolPosition);
 			pos.initialiseCurrentPosition(node);
