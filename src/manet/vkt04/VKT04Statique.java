@@ -140,11 +140,15 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 			this.myState = state.ELECTION;
 			
 			// Diffusion à nos enfants qu'une élection est en cours
-			for(int i = 0;i<Network.size();i++) {
-				long id = Network.get(i).getID();
-				if(id != this.electionParent) {
-					emitter.emit(node, new ElectionMessage(node.getID(), id, myPid));
+			if(this.myNeighbors.size() > 1) {
+				for(int i = 0;i<Network.size();i++) {
+					long id = Network.get(i).getID();
+					if(id != this.electionParent) {
+						emitter.emit(node, new ElectionMessage(node.getID(), id, myPid));
+					}
 				}
+			} else { // Si on a pas d'enfant, on envoie un ack à notre parent
+				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionMaxNodeValue, this.electionMaxNodeId));
 			}
 		}
 	}
