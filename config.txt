@@ -18,10 +18,11 @@ control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
+control.gmonitor.monitorableprotocol neighbors
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
-protocol.emitter.latency 0
+protocol.emitter.latency 270
 protocol.emitter.variance 0
 protocol.emitter.scope 100
 

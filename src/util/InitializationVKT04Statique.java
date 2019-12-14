@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import manet.communication.Emitter;
 import manet.positioning.Position;
 import manet.positioning.PositionProtocol;
 import peersim.config.Configuration;
@@ -16,7 +17,8 @@ import peersim.core.Node;
 import peersim.edsim.EDSimulator;
 
 public class InitializationVKT04Statique implements Control {
-	private static final String PAR_PROTO = "protocol";
+	private static final String PAR_POSITIONPROTOCOL = "position";
+	private static final String PAR_NEIGHBORSPROTOCOL = "neighbors";
 	private final int pidProtocolPosition;
 	private final int pidProtocolNeighbor;
 	private final int scope;
@@ -25,8 +27,8 @@ public class InitializationVKT04Statique implements Control {
 
 	
 	public InitializationVKT04Statique(String prefix) {
-		pidProtocolPosition = Configuration.lookupPid("position");
-		pidProtocolNeighbor = Configuration.lookupPid("neighbors");
+		pidProtocolPosition = Configuration.lookupPid(PAR_POSITIONPROTOCOL);
+		pidProtocolNeighbor = Configuration.lookupPid(PAR_NEIGHBORSPROTOCOL);
 		scope = Configuration.getInt("protocol.emitter.scope");
 	}
 
@@ -43,16 +45,20 @@ public class InitializationVKT04Statique implements Control {
 			
 			nodesIdAndPosition.put(i, 
 					new AbstractMap.SimpleEntry<>(node.getID(), pos.getCurrentPosition()));
-			
-			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 		}
+		int max = -1;
+		long leader = -1;
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
 			
-			int myValue;
-			do {
-				myValue = (int)(Math.random()*100);
-			} while(values.contains(myValue));
+			int myValue = (int)(Math.random()*10);
+			
+			if(myValue > max) {
+				max = myValue;
+				leader = node.getID();
+			} else if(myValue == max) {
+				leader = node.getID();
+			}
 			
 			List<Long> myNeighbors = new ArrayList<>();
 			for (int j = 0; j < Network.size(); j++) {
@@ -68,6 +74,13 @@ public class InitializationVKT04Statique implements Control {
 			
 			EDSimulator.add(0, si, node, pidProtocolNeighbor);
 		}
+		
+		System.out.println("Leader = "+leader+" valeur = "+max);
+		
+
+		EDSimulator.add(2500, "START_ELECTION", Network.get(9), pidProtocolNeighbor);
+		EDSimulator.add(10000, "START_ELECTION", Network.get(2), pidProtocolNeighbor);
+		
 		return false;
 	}
 	
