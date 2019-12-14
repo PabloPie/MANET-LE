@@ -1,15 +1,15 @@
-network.size 5
+network.size 75
 random.seed 123
-simulation.endtime 50000000
+simulation.endtime 500000000
 
 init.i Initialization
 
 protocol.position PositionProtocolImpl
-protocol.position.maxspeed 100
-protocol.position.minspeed 20
-protocol.position.width 1000
-protocol.position.height 800
-protocol.position.pause 1
+protocol.position.maxspeed 20
+protocol.position.minspeed 5
+protocol.position.width 1200
+protocol.position.height 1200
+protocol.position.pause 20
 
 control.gmonitor GraphicalMonitor
 control.gmonitor.time_slow 0.002
@@ -17,25 +17,25 @@ control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
-control.gmonitor.monitorableprotocol globalviewelection
+control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
-protocol.emitter.latency 0
+protocol.emitter.latency 90
 protocol.emitter.variance 0
 protocol.emitter.scope 100
 protocol.emitter.positionprotocol position
 
 protocol.neighbors NeighborProtocolImpl
-protocol.neighbors.heartbeat_period 1
-protocol.neighbors.neighbor_timer 50
-protocol.neighbors.neighborListener globalviewelection
+protocol.neighbors.heartbeat_period 300
+protocol.neighbors.neighbor_timer 400
+protocol.neighbors.neighborListener election
 protocol.neighbors.emitter emitter
 
-protocol.globalviewelection GlobalViewElection
-protocol.globalviewelection.emitterprotocol emitter
-protocol.globalviewelection.neighborprotocol neighbors
-protocol.globalviewelection.seed_value 987
+protocol.election GlobalViewElection
+protocol.election.emitterprotocol emitter
+protocol.election.neighborprotocol neighbors
+protocol.election.seed_value 987
 
 
 ################# Strategies Initial #######################
@@ -59,12 +59,12 @@ initial_position_strategy.positionprotocol position
 
 ################# Strategies Next #######################
 
-#next_destination_strategy FullRandom
-#next_destination_strategy.positionprotocol position
-
-next_destination_strategy ConnectedRandom
+next_destination_strategy FullRandom
 next_destination_strategy.positionprotocol position
-next_destination_strategy.emitter emitter
+
+#next_destination_strategy ConnectedRandom
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.emitter emitter
 
 #next_destination_strategy NextDestinationConnectedOneMove
 #next_destination_strategy.positionprotocol position

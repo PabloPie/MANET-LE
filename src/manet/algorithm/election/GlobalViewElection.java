@@ -15,13 +15,9 @@ import util.globalview.EditMessage;
 import util.globalview.KnowledgeMessage;
 import util.globalview.View;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener, ElectionInit {
-
 
     // Protocol configuration variables
     private static final String PAR_NEIGHBORPID = "neighborprotocol";
@@ -36,8 +32,8 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     private int myid;
 
     // Election variables
-    // Values are fixed? Can we actually build a map of these values to be able to use a set in our view?
     private long leader;
+    private int leaderval = -1;
     private int value;
     private View[] knowledge = new View[Network.size()];
 
@@ -80,8 +76,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         edit.addRemoved(id_lost_neighbor, knowledge[myid].getValue(id_lost_neighbor));
         knowledge[myid].removeNeighbor(id_lost_neighbor);
         knowledge[myid].clock++;
-        if(id_lost_neighbor == leader)
-            calculateLeader();
+        calculateLeader();
         Emitter e = (EmitterImpl) host.getProtocol(emitPid);
         EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
         e.emit(host, editMsg);
@@ -147,6 +142,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
             e.emit(node, editMsg);
         }
+        calculateLeader();
     }
 
 
@@ -181,9 +177,9 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             }
             updated = false;
         }
+        calculateLeader();
         if (!updatedK) return;
         // Knowledge was updated
-        calculateLeader();
         Emitter e = (EmitterImpl) node.getProtocol(emitPid);
         EditMessage edit = new EditMessage(myid, Emitter.ALL, myPid, msg.getEdit());
         e.emit(node, edit);
@@ -194,12 +190,23 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
      */
 
     private void calculateLeader() {
-        int higher = -1;
-        long l = 0;
-        // iterate through my neighbors, my neighbors' neighbors, etc...
-        for(Map.Entry<Long,Integer> e: knowledge[myid].getNeighbors().entrySet())
-            if(e.getValue() > higher) l=e.getKey();
-        this.leader = l;
+        this.leaderval =-1;
+        Set<Long> visited = new HashSet<>();
+        getHighest(knowledge[myid].getNeighbors(), visited);
+    }
+
+    private void getHighest(Map<Long,Integer> neighbors, Set<Long> visited){
+        if(neighbors.isEmpty() || neighbors == null) return ;
+        for(Map.Entry<Long,Integer> e: neighbors.entrySet()){
+            if(e.getValue() > this.leaderval){
+                this.leaderval = e.getValue();
+                this.leader = e.getKey();
+            }
+            if(e.getKey() != myid && knowledge[e.getKey().intValue()]!=null && !visited.contains(e.getKey())) {
+                visited.add(e.getKey());
+                getHighest(knowledge[e.getKey().intValue()].getNeighbors(), visited);
+            }
+        }
     }
 
     // Returns a map that contains the values that are in map1 but not in map2
