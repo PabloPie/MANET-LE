@@ -36,7 +36,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	private final int pidPosition;
 	private final int pidEmitter;
 	
-	private int myValue;
+	private Pair<Integer, Long> myId;
 	private List<Long> myNeighbors;
 	private state myState;
 	private long myLeader;
@@ -44,8 +44,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	private boolean electionStarted;
 	private Pair<Integer, Long> electionId; // Id élection + Id initiateur pour ordre total
 	private long electionParent;
-	private int electionMaxNodeValue;
-	private long electionMaxNodeId;
+	private Pair<Integer, Long> electionMax;
 	private int electionAck;
 	
 	public VKT04Statique(String prefix) {
@@ -63,7 +62,6 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		VKT04Statique res = null;
 		try {
 			res = (VKT04Statique) super.clone();
-			res.myValue = (int)(Math.random() * 100);
 			res.myNeighbors = new ArrayList<Long>();
 		} catch (CloneNotSupportedException e) {
 		}
@@ -90,7 +88,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		// Reception de la valeur du neoud et des voisins par la classe init
 		else if(event instanceof InitializationStaticParameters) {
 			InitializationStaticParameters isp = (InitializationStaticParameters)event;
-			this.myValue = isp.value;
+			this.myId = new Pair<Integer, Long>(isp.value, node.getID());
 			this.myNeighbors = isp.neighbors;
 			
 			// Démarrage du loo_event
@@ -106,8 +104,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 				Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
 				emitter.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
 				this.electionStarted = true;
-				this.electionMaxNodeId = node.getID();
-				this.electionMaxNodeValue = this.myValue;
+				this.electionMax = this.myId;
 				this.myState = state.ELECTION;
 			}
 			else System.out.println("Node " + node.getID() + " : " + event);
@@ -127,7 +124,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		if(this.electionStarted && msg.getElectionId().equals(this.electionId)) {
 			// Si l'émetteur n'est pas notre parent alors on acquitte
 			if(msg.getIdSrc() != this.electionParent) {
-				emitter.emit(node, new AckMessage(node.getID(), msg.getIdSrc(), myPid, this.electionId, this.electionMaxNodeValue, this.electionMaxNodeId));
+				emitter.emit(node, new AckMessage(node.getID(), msg.getIdSrc(), myPid, this.electionId, this.electionMax));
 			}
 		}
 		// Sinon si l'ElectiondId du message est suppérieur alors c'est une nouvelle élection
@@ -139,8 +136,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 			this.electionStarted = true;
 			this.electionAck = 0;
 			this.electionId = msg.getElectionId();
-			this.electionMaxNodeId = node.getID();
-			this.electionMaxNodeValue = this.myValue;
+			this.electionMax = this.myId;
 			this.myState = state.ELECTION;
 			
 			// Diffusion à nos enfants qu'une élection est en cours
@@ -152,7 +148,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 					}
 				}
 			} else { // Si on a pas d'enfant, on envoie un ack à notre parent
-				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMaxNodeValue, this.electionMaxNodeId));
+				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 			}
 		}
 	}
@@ -171,19 +167,19 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		this.electionAck++;
 		
 		// On garde la plus grande valeur
-		this.udpdateMaxNode(msg.getMaxNodeId(), msg.getMaxValue());
+		this.udpdateMaxNode(msg.getMaxNode());
 		
 		if(this.electionId._2.equals(node.getID())) { // Si on est l'initiateur de l'élection
 			// Si on a reçu un ack de tous nos enfants alors on envoie un message de leader
 			if(electionAck == this.myNeighbors.size()) {
-				emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMaxNodeValue, this.electionMaxNodeId));
+				emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 				this.electionDone(node);
 			}
 		}
 		else { // Si on est pas l'initiateur...
 			// .. et qu'on a reçu un ack de tous nos enfants alors on envoie un ack à notre parent
 			if(electionAck == this.myNeighbors.size() - 1) {
-				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMaxNodeValue, this.electionMaxNodeId));
+				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 			}
 		}
 	}
@@ -201,10 +197,10 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
 		
 		// On garde la plus grande valeur
-		this.udpdateMaxNode(msg.getMaxNodeId(), msg.getMaxValue());
+		this.udpdateMaxNode(msg.getMaxNode());
 		
 		// On diffuse l'information sur le leader
-		emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMaxNodeValue, this.electionMaxNodeId));
+		emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 		
 		// On est plus en élection
 		this.electionDone(node);
@@ -215,13 +211,9 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	 * @param nodeid Nouveau noeud à comparer
 	 * @param value Valeur du nouveau noeud
 	 */
-	private void udpdateMaxNode(long nodeid, int value) {
-		if(value > this.electionMaxNodeValue) {
-			this.electionMaxNodeId = nodeid;
-			this.electionMaxNodeValue = value;
-		}
-		else if(value == this.electionMaxNodeValue && nodeid > this.electionMaxNodeId) {
-			this.electionMaxNodeId = nodeid;
+	private void udpdateMaxNode(Pair<Integer, Long> nodeId) {
+		if(nodeId.compareTo(this.electionMax) == 1) {
+			this.electionMax = nodeId;
 		}
 	}
 	
@@ -230,10 +222,10 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	 * @param n Noeud ayant terminé l'élection
 	 */
 	private void electionDone(Node n) {
-		if(this.electionMaxNodeId == n.getID()) this.myState = state.LEADER;
+		if(this.electionMax._2 == n.getID()) this.myState = state.LEADER;
 		else this.myState = state.LEADER_KNWON;
 		
-		this.myLeader = this.electionMaxNodeId;
+		this.myLeader = this.electionMax._2;
 		this.electionAck = 0;
 		this.electionStarted = false;
 	}
@@ -250,7 +242,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 
 	@Override
 	public int getValue() {
-		return myValue;
+		return myId._1;
 	}
 		
 	@Override
@@ -272,7 +264,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	@Override
 	public List<String> infos(Node host) {
 		List<String> res = new ArrayList<String>();
-		res.add("Node " + host.getID() + " (" + this.myValue + ")");
+		res.add("Node " + this.myId._2 + " (" + this.myId._1 + ")");
 		res.add("Leader " + this.myLeader);
 		res.add("Election " + this.electionId);
 		return res;
