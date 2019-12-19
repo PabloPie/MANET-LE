@@ -1,12 +1,14 @@
 package util;
 
 public class AckMessage extends Message {
-	private int maxValue;
-	private long maxNodeId;
-	public AckMessage(long idsrc, long iddest, int pid, int maxValue, long maxNodeId) {
+	private final int maxValue;
+	private final long maxNodeId;
+	private final Pair<Integer, Long> id;
+	public AckMessage(long idsrc, long iddest, int pid, Pair<Integer, Long> id, int maxValue, long maxNodeId) {
 		super(idsrc, iddest, pid);
 		this.maxValue = maxValue;
 		this.maxNodeId = maxNodeId;
+		this.id = id;
 	}
 	
 	public int getMaxValue() {
@@ -15,6 +17,10 @@ public class AckMessage extends Message {
 	
 	public long getMaxNodeId() {
 		return this.maxNodeId;
+	}
+	
+	public Pair<Integer, Long> getElectionId() {
+		return this.id;
 	}
 
 }
