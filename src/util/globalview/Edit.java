@@ -28,11 +28,11 @@ public class Edit {
         }
 
         public void setRemoved(Map<Long, Integer> removed) {
-                this.removed = removed;
+                this.removed = new HashMap<>(removed);
         }
 
         public void setAdded(Map<Long, Integer> added) {
-                this.added = added;
+                this.added = new HashMap<>(added);
         }
 
         public Map<Long,Integer> getAdded(){

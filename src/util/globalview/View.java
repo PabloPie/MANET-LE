@@ -1,13 +1,13 @@
 package util.globalview;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class View {
     public int clock;
     //separate node -> value in a map, and set of neighbors?
     private Map<Long, Integer> neighbors;
+    // private Set<Long> neighbors;
 
     public View(int clock){
         this.clock = clock;
@@ -15,12 +15,13 @@ public class View {
     }
 
     public View(int clock, Map<Long, Integer> neighbors){
-        this.neighbors = neighbors;
+        this.neighbors = new HashMap<>(neighbors);
         this.clock = clock;
     }
 
     public boolean addNeighbor(long id, int value) {
         // putIfAbsent returns null when it is added
+        // we assume node values don't change
         return neighbors.putIfAbsent(id, value)==null;
     }
 
@@ -38,7 +39,7 @@ public class View {
     }
 
     public void setNeighbors(Map<Long, Integer> neighbors) {
-        this.neighbors = neighbors;
+        this.neighbors = new HashMap<>(neighbors);
     }
 }
 
