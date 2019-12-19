@@ -29,5 +29,10 @@ public class Pair<A extends Comparable<A>,B extends Comparable<B>> implements Co
 		}
 		return cmp1;
 	}
+	
+	@Override
+	public String toString() {
+		return "(" + this._1 + " ; " + this._2 + ")";
+	}
 
 }

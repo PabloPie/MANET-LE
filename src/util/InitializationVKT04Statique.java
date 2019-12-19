@@ -76,10 +76,11 @@ public class InitializationVKT04Statique implements Control {
 		}
 		
 		System.out.println("Leader = "+leader+" valeur = "+max);
-		
 
-		EDSimulator.add(2500, "START_ELECTION", Network.get(9), pidProtocolNeighbor);
-		EDSimulator.add(10000, "START_ELECTION", Network.get(2), pidProtocolNeighbor);
+		EDSimulator.add(1500, "START_ELECTION", Network.get(2), pidProtocolNeighbor);
+		EDSimulator.add(2000, "START_ELECTION", Network.get(0), pidProtocolNeighbor);
+		EDSimulator.add(2100, "START_ELECTION", Network.get(3), pidProtocolNeighbor);
+		EDSimulator.add(15000, "START_ELECTION", Network.get(1), pidProtocolNeighbor);
 		
 		return false;
 	}
