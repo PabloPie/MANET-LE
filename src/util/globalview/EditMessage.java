@@ -1,6 +1,5 @@
 package util.globalview;
 
-import manet.algorithm.election.GlobalViewElection;
 import util.Message;
 
 import java.util.ArrayList;
@@ -11,13 +10,13 @@ public class EditMessage extends Message {
 
     public EditMessage(long idsrc, long iddest, int pid, ArrayList<Edit> edit) {
         super(idsrc, iddest, pid);
-        this.edit = edit;
+        this.edit = new ArrayList<>(edit);
     }
 
     public EditMessage(long idsrc, long iddest, int pid, Edit edit) {
         super(idsrc, iddest, pid);
         this.edit = new ArrayList<>();
-        this.edit.add(edit);
+        this.edit.add(new Edit(edit));
     }
 
     public EditMessage(long idsrc, long iddest, int pid) {
@@ -26,7 +25,7 @@ public class EditMessage extends Message {
     }
 
     public void addEdit(Edit edit) {
-        this.edit.add(edit);
+        this.edit.add(new Edit(edit));
     }
 
     public ArrayList<Edit> getEdit() {

@@ -12,11 +12,19 @@ public class Edit {
         public int newclock;
 
         public Edit(long id, int oldclock, int newclock){
-                nodeid = id;
-                this.oldclock = oldclock;
-                this.newclock = newclock;
-                added = new HashMap<>();
-                removed = new HashMap<>();
+			nodeid = id;
+			this.oldclock = oldclock;
+			this.newclock = newclock;
+			added = new HashMap<>();
+			removed = new HashMap<>();
+        }
+
+        public Edit(Edit edit) {
+			nodeid = edit.nodeid;
+			added = new HashMap<>(edit.added);
+			removed = new HashMap<>(edit.removed);
+			oldclock = edit.oldclock;
+			newclock = edit.newclock;
         }
 
         public void addRemoved(long nodeid, int value){

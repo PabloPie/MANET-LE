@@ -10,7 +10,7 @@ public class KnowledgeMessage extends Message {
 
     public KnowledgeMessage(long idsrc, long iddest, int pid, View[] knowledge){
         super(idsrc, iddest, pid);
-        this.knowledge = knowledge;
+        this.knowledge = knowledge.clone();
     }
 
     public View[] getKnowledge(){
