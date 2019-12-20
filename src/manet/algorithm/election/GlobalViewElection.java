@@ -23,7 +23,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     private static final String PAR_NEIGHBORPID = "neighborprotocol";
     private static final String PAR_EMITTERPID = "emitterprotocol";
     private static final String PAR_SEED = "seed_value";
-    private final ExtendedRandom valueRandom;
     private final int myPid;
     private int emitPid;
     private int neighborPid;
@@ -43,7 +42,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     public GlobalViewElection(String prefix) {
         String tmp[] = prefix.split("\\.");
         myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
-        this.valueRandom = new ExtendedRandom(Configuration.getInt(prefix + "." + PAR_SEED));
         emitPid = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
         neighborPid = Configuration.getPid(prefix + "." + PAR_NEIGHBORPID);
     }
@@ -61,7 +59,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
 
     public void initializeValues(long id) {
         myid = (int) id;
-//        this.value= valueRandom.nextInt() %1000;
         this.value = myid;
         knowledge[myid] = new View(0);
         knowledge[myid].addNeighbor(id, this.value);
@@ -115,11 +112,10 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
 
         for (int id = 0; id < knowledgeJ.length; id++) {
             View peer = knowledgeJ[id];
-            if (peer == null) continue;
+            if (peer == null || id == myid) continue;
             if (knowledge[id] == null) {
                 // e <- {<p,p.neighbors,-,0,p.clock>}
                 Edit e = new Edit(id,0, peer.clock);
-                // Are values dynamic? can't we just initalize the value of id here and keep it there?
                 e.setAdded(peer.getNeighbors());
                 edit.add(e);
                 knowledge[id] = new View(peer.clock, peer.getNeighbors());
@@ -137,12 +133,12 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             }
         }
 
+        calculateLeader();
         if (!edit.isEmpty()) {
             Emitter e = (EmitterImpl) node.getProtocol(emitPid);
             EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
             e.emit(node, editMsg);
         }
-        calculateLeader();
     }
 
 
@@ -151,6 +147,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         boolean updatedK = false;
         for(Edit e: msg.getEdit()){
             int source = (int)e.nodeid;
+            if(source == myid) continue;
             if (!e.addedIsEmpty()) {
                 if (knowledge[source] == null)
                     knowledge[source] = new View(0);
