@@ -3,7 +3,7 @@ package util.globalview;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Edit {
+public class Edit implements Cloneable{
 
         public long nodeid;
         private Map<Long, Integer> added;
@@ -20,6 +20,7 @@ public class Edit {
         }
 
         public Edit(Edit edit) {
+            if (edit == null) throw new NullPointerException("Edit is null");
 			nodeid = edit.nodeid;
 			added = new HashMap<>(edit.added);
 			removed = new HashMap<>(edit.removed);

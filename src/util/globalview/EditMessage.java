@@ -10,7 +10,10 @@ public class EditMessage extends Message {
 
     public EditMessage(long idsrc, long iddest, int pid, ArrayList<Edit> edit) {
         super(idsrc, iddest, pid);
-        this.edit = new ArrayList<>(edit);
+        this.edit = new ArrayList<>();
+        for(Edit e: edit) {
+            this.edit.add(new Edit(e));
+        }
     }
 
     public EditMessage(long idsrc, long iddest, int pid, Edit edit) {

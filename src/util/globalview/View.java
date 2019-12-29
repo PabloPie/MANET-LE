@@ -3,7 +3,7 @@ package util.globalview;
 import java.util.HashMap;
 import java.util.Map;
 
-public class View {
+public class View{
     public int clock;
     //separate node -> value in a map, and set of neighbors?
     private Map<Long, Integer> neighbors;
@@ -17,6 +17,12 @@ public class View {
     public View(int clock, Map<Long, Integer> neighbors){
         this.neighbors = new HashMap<>(neighbors);
         this.clock = clock;
+    }
+
+    public View(View copy) {
+        if (copy == null) throw new NullPointerException("View is null");
+        this.clock = copy.clock;
+        this.neighbors = new HashMap<>(copy.neighbors);
     }
 
     public boolean addNeighbor(long id, int value) {
