@@ -176,9 +176,8 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         if (!updatedK) return;
         // Knowledge was updated
         Emitter e = (Emitter) node.getProtocol(emitPid);
-        // do not send to the sender
         for(long i= 0; i< Network.size(); i++) {
-            if(i == msg.getIdSrc()) continue;
+            if(i == msg.getIdSrc() || i == node.getID()) continue; // dont send to the sender or ourselves
             EditMessage edit = new EditMessage(myid, i, myPid, msg.getEdit());
             e.emit(node, edit);
         }

@@ -58,6 +58,7 @@ public class EmitterAlt implements Emitter{
                 singleEmit(host, destID, msg);
             } else { // broadcast
                 for (destID = 0; destID < Network.size(); destID++) {
+                    if (host.getID() == destID) continue;
                     singleEmit(host, destID, msg);
                 }
             }
