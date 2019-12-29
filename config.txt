@@ -1,4 +1,4 @@
-network.size 75
+network.size 10
 random.seed 123
 simulation.endtime 500000000
 
@@ -20,7 +20,7 @@ control.gmonitor.neighborprotocol neighbors
 control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
-protocol.emitter EmitterImpl
+protocol.emitter EmitterAlt
 protocol.emitter.latency 90
 protocol.emitter.variance 0
 protocol.emitter.scope 100

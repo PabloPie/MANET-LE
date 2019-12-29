@@ -2,11 +2,9 @@ package manet.algorithm.election;
 
 import manet.Monitorable;
 import manet.communication.Emitter;
-import manet.communication.EmitterImpl;
 import manet.detection.NeighborhoodListener;
 import peersim.core.Network;
 import peersim.core.Node;
-import peersim.util.ExtendedRandom;
 
 import peersim.config.Configuration;
 import util.Message;
@@ -50,10 +48,10 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         GlobalViewElection election = null;
         try {
             election = (GlobalViewElection) super.clone();
+            election.knowledge = new View[Network.size()];
         } catch (CloneNotSupportedException e) {
             e.printStackTrace();
         }
-        election.knowledge = new View[Network.size()];
         return election;
     }
 
@@ -74,7 +72,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         knowledge[myid].removeNeighbor(id_lost_neighbor);
         knowledge[myid].clock++;
         calculateLeader();
-        Emitter e = (EmitterImpl) host.getProtocol(emitPid);
+        Emitter e = (Emitter) host.getProtocol(emitPid);
         EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
         e.emit(host, editMsg);
     }
@@ -85,7 +83,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         knowledge[myid].addNeighbor(id_new_neighbor, gv.getValue());
         knowledge[myid].clock++;
         calculateLeader();
-        Emitter e = (EmitterImpl) host.getProtocol(emitPid);
+        Emitter e = (Emitter) host.getProtocol(emitPid);
         KnowledgeMessage knowledgeMessage = new KnowledgeMessage(myid, Emitter.ALL, myPid, knowledge);
         e.emit(host, knowledgeMessage);
     }
@@ -135,7 +133,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
 
         calculateLeader();
         if (!edit.isEmpty()) {
-            Emitter e = (EmitterImpl) node.getProtocol(emitPid);
+            Emitter e = (Emitter) node.getProtocol(emitPid);
             EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
             e.emit(node, editMsg);
         }
@@ -177,7 +175,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         calculateLeader();
         if (!updatedK) return;
         // Knowledge was updated
-        Emitter e = (EmitterImpl) node.getProtocol(emitPid);
+        Emitter e = (Emitter) node.getProtocol(emitPid);
         EditMessage edit = new EditMessage(myid, Emitter.ALL, myPid, msg.getEdit());
         e.emit(node, edit);
     }
@@ -208,7 +206,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
 
     // Returns a map that contains the values that are in map1 but not in map2
     public Map<Long, Integer> mapDifference(Map<Long, Integer> map1, Map<Long, Integer> map2){
-        Map<Long, Integer> diff = new HashMap<Long, Integer>(map1);
+        Map<Long, Integer> diff = new HashMap<>(map1);
         for(Long id: map2.keySet()){
             diff.remove(id);
         }
@@ -233,7 +231,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
      */
     @Override
     public List<String> infos(Node host) {
-        List<String> res = new ArrayList<String>();
+        List<String> res = new ArrayList<>();
         res.add("Node: " + host.getID());
         GlobalViewElection gv = (GlobalViewElection) host.getProtocol(myPid);
         res.add("Leader: " + gv.getIDLeader());
