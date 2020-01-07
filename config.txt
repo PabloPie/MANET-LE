@@ -1,5 +1,5 @@
-network.size 10
-random.seed 123
+network.size 75
+random.seed 0
 simulation.endtime 500000000
 
 init.i Initialization

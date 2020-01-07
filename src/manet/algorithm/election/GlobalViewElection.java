@@ -116,7 +116,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 Edit e = new Edit(id,0, peer.clock);
                 e.setAdded(peer.getNeighbors());
                 edit.add(e);
-                knowledge[id] = peer;
             } else if (peer.clock > knowledge[id].clock) {
                 // p.neighbors \ knowledge[p].neighbors O(n2)?
                 Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge[id].getNeighbors());
@@ -126,9 +125,8 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 e.setAdded(added);
                 e.setRemoved(removed);
                 edit.add(e);
-                knowledge[id].setNeighbors(peer.getNeighbors());
-                knowledge[id].clock = peer.clock;
             }
+            knowledge[id] = new View(peer);
         }
 
         calculateLeader();

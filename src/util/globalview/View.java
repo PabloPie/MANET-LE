@@ -45,7 +45,7 @@ public class View{
     }
 
     public void setNeighbors(Map<Long, Integer> neighbors) {
-        this.neighbors = neighbors;
+        this.neighbors = new HashMap<>(neighbors);
     }
 }
 

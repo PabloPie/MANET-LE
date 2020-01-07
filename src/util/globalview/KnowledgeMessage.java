@@ -10,10 +10,7 @@ public class KnowledgeMessage extends Message {
 
     public KnowledgeMessage(long idsrc, long iddest, int pid, View[] knowledge){
         super(idsrc, iddest, pid);
-        this.knowledge = new View[knowledge.length];
-        for (int i = 0; i < knowledge.length; i++)
-            if(knowledge[i] != null)
-                this.knowledge[i] = new View(knowledge[i]);
+        this.knowledge = knowledge;
     }
 
     public View[] getKnowledge(){
