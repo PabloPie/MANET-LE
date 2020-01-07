@@ -37,11 +37,11 @@ public class Edit implements Cloneable{
         }
 
         public void setRemoved(Map<Long, Integer> removed) {
-                this.removed = new HashMap<>(removed);
+                this.removed = removed;
         }
 
         public void setAdded(Map<Long, Integer> added) {
-                this.added = new HashMap<>(added);
+                this.added = added;
         }
 
         public Map<Long,Integer> getAdded(){

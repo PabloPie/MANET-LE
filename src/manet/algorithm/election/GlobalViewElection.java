@@ -106,7 +106,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
 
     private void knowledgeReception(Node node, KnowledgeMessage msg) {
         View[] knowledgeJ = msg.getKnowledge();
-        ArrayList<Edit> edit = new ArrayList<>();
+        List<Edit> edit = new ArrayList<>();
 
         for (int id = 0; id < knowledgeJ.length; id++) {
             View peer = knowledgeJ[id];
@@ -116,7 +116,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 Edit e = new Edit(id,0, peer.clock);
                 e.setAdded(peer.getNeighbors());
                 edit.add(e);
-                knowledge[id] = new View(peer.clock, peer.getNeighbors());
+                knowledge[id] = peer;
             } else if (peer.clock > knowledge[id].clock) {
                 // p.neighbors \ knowledge[p].neighbors O(n2)?
                 Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge[id].getNeighbors());
