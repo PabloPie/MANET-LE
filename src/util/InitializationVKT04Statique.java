@@ -71,8 +71,9 @@ public class InitializationVKT04Statique implements Control {
 			}
 			
 			InitializationStaticParameters si = new InitializationStaticParameters(myValue, myNeighbors);
-			
+
 			EDSimulator.add(0, si, node, pidProtocolNeighbor);
+			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 		}
 		
 		System.out.println("Leader = "+leader+" valeur = "+max);
