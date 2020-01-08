@@ -3,7 +3,8 @@ random.seed 123
 simulation.endtime 50000000
 
 #init.i util.Initialization
-init.t util.InitializationVKT04Statique
+#init.t util.InitializationVKT04Statique
+init.t util.InitializationVKT04Dynamique
 
 protocol.position PositionProtocolImpl
 protocol.position.maxspeed 100
@@ -18,7 +19,7 @@ control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
-control.gmonitor.monitorableprotocol neighbors
+control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
@@ -26,14 +27,16 @@ protocol.emitter.latency 270
 protocol.emitter.variance 0
 protocol.emitter.scope 100
 
-#protocol.neighbors NeighborProtocolImpl
-#protocol.neighbors.heartbeat_period 12
-#protocol.neighbors.neighbor_timer 10
-#protocol.neighbors.emitter emitter
-
-protocol.neighbors VKT04Statique
+protocol.neighbors NeighborProtocolImpl
+protocol.neighbors.heartbeat_period 10
+protocol.neighbors.neighbor_timer 12
 protocol.neighbors.emitter emitter
-protocol.neighbors.position position
+protocol.neighbors.neighborListener election
+
+protocol.election VKT04Dynamique
+protocol.election.emitter emitter
+protocol.election.position position
+protocol.election.neighbors neighbors
 
 ################# Strategies Initial #######################
 
@@ -50,7 +53,7 @@ protocol.neighbors.position position
 #initial_position_strategy.distance_init_min 25
 #initial_position_strategy.distance_init_max 75
 
-initial_position_strategy InitialPositionConnectedRing
+initial_position_strategy InitialPositionConnectedRing2
 initial_position_strategy.positionprotocol position
 initial_position_strategy.emitter emitter
 

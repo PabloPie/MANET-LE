@@ -33,7 +33,7 @@ public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
 		this.neighbor_timer = Configuration.getInt(prefix + "." + PAR_NEIGHBOR_TIMER);
 		this.heartbeat_period = Configuration.getInt(prefix + "." + PAR_HEARTBEATPERIOD);
-		this.pidProtocolNeighborListener = Configuration.getPid(PAR_NEIGHBOR_LISTENER, -1); // no Listener -> -1
+		this.pidProtocolNeighborListener = Configuration.getPid(prefix + "." + PAR_NEIGHBOR_LISTENER);
 		this.pidProtocolEmitter = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
 		this.neighbors = new ConcurrentHashMap<>();
 	}
