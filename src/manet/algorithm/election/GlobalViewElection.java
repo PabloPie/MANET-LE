@@ -99,7 +99,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         if (event instanceof KnowledgeMessage) {
             knowledgeReception(node, (KnowledgeMessage)event);
         } else if (event instanceof EditMessage) {
-            editReception(node, pid, (EditMessage)event);
+            editReception(node, (EditMessage)event);
         } else
             System.err.println("Not a valid event type");
     }
@@ -116,6 +116,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 Edit e = new Edit(id,0, peer.clock);
                 e.setAdded(peer.getNeighbors());
                 edit.add(e);
+                knowledge[id] = new View(peer);
             } else if (peer.clock > knowledge[id].clock) {
                 // p.neighbors \ knowledge[p].neighbors O(n2)?
                 Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge[id].getNeighbors());
@@ -125,12 +126,12 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 e.setAdded(added);
                 e.setRemoved(removed);
                 edit.add(e);
+                knowledge[id] = new View(peer);
             }
-            knowledge[id] = new View(peer);
         }
 
-        calculateLeader();
         if (!edit.isEmpty()) {
+            calculateLeader();
             Emitter e = (Emitter) node.getProtocol(emitPid);
             EditMessage editMsg = new EditMessage(myid, Emitter.ALL, myPid, edit);
             e.emit(node, editMsg);
@@ -138,17 +139,20 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     }
 
 
-    private void editReception(Node node, int pid, EditMessage msg) {
+    private void editReception(Node node, EditMessage msg) {
         boolean updated = false;
         boolean updatedK = false;
         for(Edit e: msg.getEdit()){
             int source = (int)e.nodeid;
             if(source == myid) continue;
             if (!e.addedIsEmpty()) {
-                if (knowledge[source] == null)
-                    knowledge[source] = new View(0);
-
-                if ( e.oldclock==0 || knowledge[source].clock == e.oldclock) {
+                if (knowledge[source] == null) {
+                    if (e.oldclock == 0) {
+                        knowledge[source] = new View(0);
+                        knowledge[source].setNeighbors(e.getAdded());
+                        updated = true;
+                    }
+                } else if (knowledge[source].clock == e.oldclock) {
                     // knowledge[source].neighbors U added
                     for (Map.Entry<Long,Integer> entry: e.getAdded().entrySet())
                         updated |= knowledge[source].addNeighbor(entry.getKey(), entry.getValue());
@@ -170,15 +174,12 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             }
             updated = false;
         }
-        calculateLeader();
         if (!updatedK) return;
+        calculateLeader();
         // Knowledge was updated
         Emitter e = (Emitter) node.getProtocol(emitPid);
-        for(long i= 0; i< Network.size(); i++) {
-            if(i == msg.getIdSrc() || i == node.getID()) continue; // dont send to the sender or ourselves
-            EditMessage edit = new EditMessage(myid, i, myPid, msg.getEdit());
-            e.emit(node, edit);
-        }
+        EditMessage edit = new EditMessage(myid, Emitter.ALL, myPid, msg.getEdit());
+        e.emit(node, edit);
     }
 
     /*
@@ -237,6 +238,13 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         GlobalViewElection gv = (GlobalViewElection) host.getProtocol(myPid);
         res.add("Leader: " + gv.getIDLeader());
         return res;
+    }
+
+    @Override
+    public int getState(Node host) {
+        if (myid == leader)
+            return 6;
+        return 0;
     }
 
     private void printKnowledge(long id, View[] knowledge){
