@@ -10,14 +10,11 @@ import manet.detection.NeighborProtocol;
 import peersim.config.Configuration;
 import peersim.core.Network;
 import peersim.core.Node;
-import peersim.edsim.EDSimulator;
 import util.AckMessage;
 import util.ElectionMessage;
 import util.LeaderMessage;
 import util.Message;
 import util.Pair;
-import util.InitializationVKT04Statique.InitializationStaticParameters;
-
 
 public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborProtocol {
 	private static final String PAR_POSITIONPID = "position";
@@ -85,16 +82,6 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 			else if(msg instanceof LeaderMessage)
 				this.processLeaderMessage(node, (LeaderMessage)msg);
 		}
-		// Reception de la valeur du neoud et des voisins par la classe init
-		else if(event instanceof InitializationStaticParameters) {
-			InitializationStaticParameters isp = (InitializationStaticParameters)event;
-			this.myId = new Pair<Integer, Long>(isp.value, node.getID());
-			this.myNeighbors = isp.neighbors;
-			
-			// Démarrage du loo_event
-			EDSimulator.add(0, loop_event, node, pid);
-		}
-		
 		else if(event instanceof String) {
 			
 			// Si on reçoit l'ordre de démarrer une élection
@@ -268,5 +255,15 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 		res.add("Leader " + this.myLeader);
 		res.add("Election " + this.electionId);
 		return res;
+	}
+
+	@Override
+	public void initialiseNeighbors(List<Long> neighbors) {
+		this.myNeighbors = neighbors;
+	}
+
+	@Override
+	public void initialiseValueId(Pair<Integer, Long> id) {
+		this.myId = id;
 	}
 }

@@ -10,6 +10,7 @@ import java.util.Set;
 import manet.communication.Emitter;
 import manet.positioning.Position;
 import manet.positioning.PositionProtocol;
+import manet.vkt04.VKT04Statique;
 import peersim.config.Configuration;
 import peersim.core.Control;
 import peersim.core.Network;
@@ -36,7 +37,6 @@ public class InitializationVKT04Statique implements Control {
 	public boolean execute() {
 		// La valeur de la Map est un tuple de l'ID du noeud avec sa position
 		Map<Integer, Map.Entry<Long, Position> > nodesIdAndPosition = new HashMap<>();
-		Set<Integer> values = new HashSet<>();
 		
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
@@ -46,37 +46,25 @@ public class InitializationVKT04Statique implements Control {
 			nodesIdAndPosition.put(i, 
 					new AbstractMap.SimpleEntry<>(node.getID(), pos.getCurrentPosition()));
 		}
-		int max = -1;
-		long leader = -1;
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
+			VKT04Statique vkt = (VKT04Statique) node.getProtocol(pidProtocolNeighbor);
 			
-			int myValue = (int)(Math.random()*10);
-			
-			if(myValue > max) {
-				max = myValue;
-				leader = node.getID();
-			} else if(myValue == max) {
-				leader = node.getID();
-			}
-			
-			List<Long> myNeighbors = new ArrayList<>();
+			List<Long> neighbors = new ArrayList<>();
 			for (int j = 0; j < Network.size(); j++) {
 				if(i == j) continue;
 				
 				// Si la position du noeud i est à distance inferieure à scope de la position du noeud j alors c'est un voisin
 				if(nodesIdAndPosition.get(i).getValue().distance(nodesIdAndPosition.get(j).getValue()) <= scope) {
-					myNeighbors.add(nodesIdAndPosition.get(j).getKey());
+					neighbors.add(nodesIdAndPosition.get(j).getKey());
 				}
 			}
 			
-			InitializationStaticParameters si = new InitializationStaticParameters(myValue, myNeighbors);
+			vkt.initialiseValueId(new Pair<Integer, Long>((int)(Math.random()*10), node.getID()));
+			vkt.initialiseNeighbors(neighbors);
 
-			EDSimulator.add(0, si, node, pidProtocolNeighbor);
 			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 		}
-		
-		System.out.println("Leader = "+leader+" valeur = "+max);
 
 		EDSimulator.add(1500, "START_ELECTION", Network.get(2), pidProtocolNeighbor);
 		EDSimulator.add(2000, "START_ELECTION", Network.get(0), pidProtocolNeighbor);
@@ -84,14 +72,5 @@ public class InitializationVKT04Statique implements Control {
 		EDSimulator.add(15000, "START_ELECTION", Network.get(1), pidProtocolNeighbor);
 		
 		return false;
-	}
-	
-	public class InitializationStaticParameters {
-		public int value;
-		public List<Long> neighbors;
-		public InitializationStaticParameters(int v, List<Long> n) {
-			this.value = v;
-			this.neighbors = n;
-		}
 	}
 }

@@ -1,6 +1,7 @@
 package manet.algorithm.election;
 
 import peersim.edsim.EDProtocol;
+import util.Pair;
 
 /**
  * @author jonathan.lejeune@lip6.fr
@@ -19,5 +20,7 @@ public interface ElectionProtocol extends EDProtocol {
 	 * site a des chances d'être élu
 	 */
 	public int getValue();
+	
+	public void initialiseValueId(Pair<Integer, Long> id);
 
 }
