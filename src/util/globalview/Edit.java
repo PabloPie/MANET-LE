@@ -3,7 +3,7 @@ package util.globalview;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Edit implements Cloneable{
+public class Edit {
 
         public long nodeid;
         private Map<Long, Integer> added;
