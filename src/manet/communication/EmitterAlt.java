@@ -51,7 +51,6 @@ public class EmitterAlt implements Emitter{
 
         @Override
         public void emit(Node host, Message msg) {
-            int latency = this.latency;
             int destID = (int) msg.getIdDest();
 
             if (destID != Emitter.ALL) { // send message to single node

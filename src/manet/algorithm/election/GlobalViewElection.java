@@ -15,22 +15,21 @@ import util.globalview.View;
 
 import java.util.*;
 
+
 public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener, ElectionInit {
 
     // Protocol configuration variables
-    private static final String PAR_NEIGHBORPID = "neighborprotocol";
     private static final String PAR_EMITTERPID = "emitterprotocol";
     private static final String PAR_SEED = "seed_value";
     private final int myPid;
     private int emitPid;
-    private int neighborPid;
-
-    // Aux
-    private int myid;
 
     // Election variables
     private long leader;
-    private int leaderval = -1;
+    private int leaderVal = -1;
+
+    // Node values
+    private int myid;
     private int value;
     private View[] knowledge = new View[Network.size()];
 
@@ -41,7 +40,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         String tmp[] = prefix.split("\\.");
         myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
         emitPid = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
-        neighborPid = Configuration.getPid(prefix + "." + PAR_NEIGHBORPID);
     }
 
     public Object clone() {
@@ -64,7 +62,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
     }
 
     /*
-     *  EVENTS BLOCK
+     *  EVENT BLOCK
      */
     public void lostNeighborDetected(Node host, long id_lost_neighbor) {
         Edit edit = new Edit(host.getID(), knowledge[myid].clock, knowledge[myid].clock+1);
@@ -118,7 +116,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
                 edit.add(e);
                 knowledge[id] = new View(peer);
             } else if (peer.clock > knowledge[id].clock) {
-                // p.neighbors \ knowledge[p].neighbors O(n2)?
+                // p.neighbors \ knowledge[p].neighbors
                 Map<Long, Integer> added = mapDifference(peer.getNeighbors(), knowledge[id].getNeighbors());
                 // knowledge[p].neighbors \ p.neighbors
                 Map<Long, Integer> removed = mapDifference(knowledge[id].getNeighbors(), peer.getNeighbors());
@@ -182,30 +180,6 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         e.emit(node, edit);
     }
 
-    /*
-     * HELPERS
-     */
-
-    private void calculateLeader() {
-        this.leaderval =-1;
-        Set<Long> visited = new HashSet<>();
-        getHighest(knowledge[myid].getNeighbors(), visited);
-    }
-
-    private void getHighest(Map<Long,Integer> neighbors, Set<Long> visited){
-        if(neighbors.isEmpty() || neighbors == null) return ;
-        for(Map.Entry<Long,Integer> e: neighbors.entrySet()){
-            if(e.getValue() > this.leaderval){
-                this.leaderval = e.getValue();
-                this.leader = e.getKey();
-            }
-            if(e.getKey() != myid && knowledge[e.getKey().intValue()]!=null && !visited.contains(e.getKey())) {
-                visited.add(e.getKey());
-                getHighest(knowledge[e.getKey().intValue()].getNeighbors(), visited);
-            }
-        }
-    }
-
     // Returns a map that contains the values that are in map1 but not in map2
     public Map<Long, Integer> mapDifference(Map<Long, Integer> map1, Map<Long, Integer> map2){
         Map<Long, Integer> diff = new HashMap<>(map1);
@@ -213,6 +187,30 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
             diff.remove(id);
         }
         return diff;
+    }
+
+    /*
+     * LEADER CALCULATION
+     */
+
+    private void calculateLeader() {
+        this.leaderVal =-1;
+        Set<Long> visited = new HashSet<>();
+        getHighest(knowledge[myid].getNeighbors(), visited);
+    }
+
+    private void getHighest(Map<Long,Integer> neighbors, Set<Long> visited){
+        if(neighbors.isEmpty() || neighbors == null) return ;
+        for(Map.Entry<Long,Integer> e: neighbors.entrySet()){
+            if(e.getValue() > this.leaderVal){
+                this.leaderVal = e.getValue();
+                this.leader = e.getKey();
+            }
+            if(e.getKey() != myid && knowledge[e.getKey().intValue()]!=null && !visited.contains(e.getKey())) {
+                visited.add(e.getKey());
+                getHighest(knowledge[e.getKey().intValue()].getNeighbors(), visited);
+            }
+        }
     }
 
     /*
@@ -247,10 +245,4 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         return 0;
     }
 
-    private void printKnowledge(long id, View[] knowledge){
-        for(View v: knowledge){
-            if(v == null) continue;
-            System.out.println("Node "+id+": "+v.clock+", "+v.getNeighbors().toString());
-        }
-    }
 }

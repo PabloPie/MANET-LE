@@ -5,18 +5,11 @@ import java.util.Map;
 
 public class View{
     public int clock;
-    //separate node -> value in a map, and set of neighbors?
     private Map<Long, Integer> neighbors;
-    // private Set<Long> neighbors;
 
     public View(int clock){
         this.clock = clock;
         this.neighbors = new HashMap<>();
-    }
-
-    public View(int clock, Map<Long, Integer> neighbors){
-        this.neighbors = new HashMap<>(neighbors);
-        this.clock = clock;
     }
 
     public View(View copy) {
@@ -27,7 +20,7 @@ public class View{
 
     public boolean addNeighbor(long id, int value) {
         // putIfAbsent returns null when it is added
-        // we assume node values don't change
+        // if we assume node values don't change we could just use put
         return neighbors.putIfAbsent(id, value)==null;
     }
 

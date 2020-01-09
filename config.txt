@@ -1,5 +1,5 @@
 network.size 75
-random.seed 0
+random.seed 1
 simulation.endtime 500000000
 
 init.i Initialization
@@ -34,8 +34,7 @@ protocol.neighbors.emitter emitter
 
 protocol.election GlobalViewElection
 protocol.election.emitterprotocol emitter
-protocol.election.neighborprotocol neighbors
-protocol.election.seed_value 987
+protocol.election.seed_value 0
 
 
 ################# Strategies Initial #######################
