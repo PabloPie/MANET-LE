@@ -16,7 +16,7 @@ import util.globalview.View;
 import java.util.*;
 
 
-public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener, ElectionInit {
+public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener {
 
     // Protocol configuration variables
     private static final String PAR_EMITTERPID = "emitterprotocol";
@@ -53,7 +53,7 @@ public class GlobalViewElection implements ElectionProtocol, Monitorable, Neighb
         return election;
     }
 
-    public void initializeValues(long id) {
+    public void init(long id) {
         myid = (int) id;
         this.value = myid;
         knowledge[myid] = new View(0);
