@@ -1,16 +1,15 @@
-network.size 10
-random.seed 123
-simulation.endtime 50000000
+network.size 75
+random.seed 1
+simulation.endtime 500000000
 
-#init.i util.Initialization
-init.t util.InitializationVKT04Statique
+init.i util.Initialization
 
 protocol.position PositionProtocolImpl
-protocol.position.maxspeed 100
-protocol.position.minspeed 20
-protocol.position.width 1000
-protocol.position.height 800
-protocol.position.pause 1
+protocol.position.maxspeed 20
+protocol.position.minspeed 5
+protocol.position.width 1200
+protocol.position.height 1200
+protocol.position.pause 20
 
 control.gmonitor GraphicalMonitor
 control.gmonitor.time_slow 0.002
@@ -18,27 +17,33 @@ control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
 control.gmonitor.neighborprotocol neighbors
-control.gmonitor.monitorableprotocol neighbors
+control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
-protocol.emitter EmitterImpl
-protocol.emitter.latency 270
+protocol.emitter EmitterAlt
+protocol.emitter.latency 90
 protocol.emitter.variance 0
 protocol.emitter.scope 100
 
-#protocol.neighbors NeighborProtocolImpl
-#protocol.neighbors.heartbeat_period 12
-#protocol.neighbors.neighbor_timer 10
-#protocol.neighbors.emitter emitter
 
-protocol.neighbors VKT04Statique
-protocol.neighbors.emitter emitter
-protocol.neighbors.position position
+protocol.neighbors NeighborProtocolImpl
+protocol.neighbors.heartbeat_period 300
+protocol.neighbors.neighbor_timer 400
+protocol.neighbors.neighborListener election
+
+#protocol.neighbors VKT04Statique
+#protocol.neighbors.emitter emitter
+#protocol.neighbors.position position
+
+protocol.election GlobalViewElection
+protocol.election.emitterprotocol emitter
+protocol.election.seed_value 0
+
 
 ################# Strategies Initial #######################
 
-#initial_position_strategy FullRandom
-#initial_position_strategy.positionprotocol position
+initial_position_strategy FullRandom
+initial_position_strategy.positionprotocol position
 
 #initial_position_strategy ConnectedRandom
 #initial_position_strategy.positionprotocol position
@@ -50,14 +55,14 @@ protocol.neighbors.position position
 #initial_position_strategy.distance_init_min 25
 #initial_position_strategy.distance_init_max 75
 
-initial_position_strategy InitialPositionConnectedRing
-initial_position_strategy.positionprotocol position
-initial_position_strategy.emitter emitter
+#initial_position_strategy InitialPositionConnectedRing
+#initial_position_strategy.positionprotocol position
+#initial_position_strategy.emitter emitter
 
 ################# Strategies Next #######################
 
-#next_destination_strategy FullRandom
-#next_destination_strategy.positionprotocol position
+next_destination_strategy FullRandom
+next_destination_strategy.positionprotocol position
 
 #next_destination_strategy ConnectedRandom
 #next_destination_strategy.positionprotocol position
@@ -69,8 +74,8 @@ initial_position_strategy.emitter emitter
 #next_destination_strategy.distance_min 15
 #next_destination_strategy.distance_max 45
 
-next_destination_strategy NextDestinationImmobility
-next_destination_strategy.positionprotocol position
+#next_destination_strategy NextDestinationImmobility
+#next_destination_strategy.positionprotocol position
 
 #next_destination_strategy NextDestinationRandomPeriodicInitial
 #next_destination_strategy.positionprotocol position

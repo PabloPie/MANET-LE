@@ -33,7 +33,7 @@ public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
 		this.neighbor_timer = Configuration.getInt(prefix + "." + PAR_NEIGHBOR_TIMER);
 		this.heartbeat_period = Configuration.getInt(prefix + "." + PAR_HEARTBEATPERIOD);
-		this.pidProtocolNeighborListener = Configuration.getPid(PAR_NEIGHBOR_LISTENER, -1); // no Listener -> -1
+		this.pidProtocolNeighborListener = Configuration.getPid(prefix + "." + PAR_NEIGHBOR_LISTENER, -1); // no Listener -> -1
 		this.pidProtocolEmitter = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
 		this.neighbors = new ConcurrentHashMap<>();
 	}
@@ -55,7 +55,7 @@ public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 			throw new RuntimeException("Receive Event for wrong protocol");
 		}
 		if (event instanceof String && event.equals(loop_event)) {
-			
+
 			// Heartbeat
 			if(CommonState.getTime()%heartbeat_period == 0) {
 				((Emitter) node.getProtocol(this.pidProtocolEmitter)).emit(node, new ProbeMessage(node.getID(), Emitter.ALL, pid));
@@ -86,7 +86,7 @@ public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 				p.newNeighborDetected(node, msg.getIdSrc());
 			}
 			// On ajoute ou met à jour le voisin et son timer
-			this.neighbors.put(msg.getIdSrc(), neighbor_timer );
+			this.neighbors.put(msg.getIdSrc(), neighbor_timer);
 		}
 	}
 
