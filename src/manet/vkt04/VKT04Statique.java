@@ -263,7 +263,7 @@ public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborPro
 	}
 
 	@Override
-	public void initialiseValueId(Pair<Integer, Long> id) {
-		this.myId = id;
+	public void init(long id) {
+		this.myId = new Pair<>((int)Math.random()%10, id);
 	}
 }

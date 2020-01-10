@@ -21,8 +21,6 @@ public interface ElectionProtocol extends EDProtocol {
 	 */
 	public int getValue();
 	
-	public void initialiseValueId(Pair<Integer, Long> id);
-
 	public default void init(long nodeID) {};
 
 }

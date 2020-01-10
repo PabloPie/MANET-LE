@@ -30,9 +30,9 @@ protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 300
 protocol.neighbors.neighbor_timer 400
 protocol.neighbors.neighborListener election
+protocol.neighbors.emitter emitter
 
 #protocol.neighbors VKT04Statique
-#protocol.neighbors.emitter emitter
 #protocol.neighbors.position position
 
 protocol.election GlobalViewElection
