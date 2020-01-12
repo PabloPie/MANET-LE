@@ -48,7 +48,8 @@ public class InitializationVKT04Dynamique implements Control {
 			EDSimulator.add(0, loop_event, node, pidProtocolNeighbor);
 			EDSimulator.add(10, "START_ELECTION", node, pidProtocolElection);
 		}
-		EDSimulator.add(2760, "START_ELECTION", Network.get(6), pidProtocolElection);
+		// Pour simuler election avec perte de voisin non parent
+		//EDSimulator.add(3295, "START_ELECTION", Network.get(4), pidProtocolElection);
 		return false;
 	}
 }

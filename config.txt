@@ -72,10 +72,14 @@ initial_position_strategy.emitter emitter
 #next_destination_strategy.distance_min 15
 #next_destination_strategy.distance_max 45
 
-next_destination_strategy NextDestinationImmobility
-next_destination_strategy.positionprotocol position
+#next_destination_strategy NextDestinationImmobility
+#next_destination_strategy.positionprotocol position
 
 #next_destination_strategy NextDestinationRandomPeriodicInitial
 #next_destination_strategy.positionprotocol position
 #next_destination_strategy.random_dest_period 10
+
+next_destination_strategy NextPingPong
+next_destination_strategy.positionprotocol position
+next_destination_strategy.emitter emitter
 
