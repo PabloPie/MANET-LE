@@ -6,6 +6,7 @@ import peersim.core.Control;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
+import peersim.util.ExtendedRandom;
 
 public class InitializationVKT04Dynamique implements Control {
 	private static final String PAR_POSITIONPROTOCOL = "position";
@@ -17,6 +18,7 @@ public class InitializationVKT04Dynamique implements Control {
 	private final int scope;
 	
 	public static final String loop_event = "LOOPEVENT";
+	private static ExtendedRandom myrand = new ExtendedRandom(4757);
 
 	
 	public InitializationVKT04Dynamique(String prefix) {
@@ -27,14 +29,16 @@ public class InitializationVKT04Dynamique implements Control {
 	}
 
 	@Override
-	public boolean execute() {		
+	public boolean execute() {
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
 			PositionProtocol pos = (PositionProtocol) node.getProtocol(pidProtocolPosition);
 			pos.initialiseCurrentPosition(node);
 			
-			VKT04Dynamique vkt = (VKT04Dynamique) node.getProtocol(pidProtocolElection);			
-			vkt.initialiseValueId(new Pair<Integer, Long>((int)(Math.random()*10), node.getID()));
+			VKT04Dynamique vkt = (VKT04Dynamique) node.getProtocol(pidProtocolElection);
+			int r = myrand.nextInt()%20;
+			if(r < 0) r = -r;
+			vkt.initialiseValueId(new Pair<Integer, Long>(r, node.getID()));
 
 		}
 		for (int i = 0; i < Network.size(); i++) {
@@ -42,8 +46,9 @@ public class InitializationVKT04Dynamique implements Control {
 			
 			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 			EDSimulator.add(0, loop_event, node, pidProtocolNeighbor);
-			EDSimulator.add(7500 + node.getID(), "START_ELECTION", node, pidProtocolElection);
+			EDSimulator.add(10, "START_ELECTION", node, pidProtocolElection);
 		}
+		EDSimulator.add(2760, "START_ELECTION", Network.get(6), pidProtocolElection);
 		return false;
 	}
 }

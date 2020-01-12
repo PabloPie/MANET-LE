@@ -1,9 +1,9 @@
 package manet.vkt04;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
 import manet.Monitorable;
 import manet.algorithm.election.ElectionProtocol;
@@ -11,7 +11,6 @@ import manet.communication.Emitter;
 import manet.detection.NeighborProtocol;
 import manet.detection.NeighborhoodListener;
 import peersim.config.Configuration;
-import peersim.core.Network;
 import peersim.core.Node;
 import util.AckMessage;
 import util.ElectionMessage;
@@ -20,7 +19,6 @@ import util.Message;
 import util.Pair;
 
 public class VKT04Dynamique implements Monitorable, ElectionProtocol, NeighborhoodListener {
-	private static final String PAR_POSITIONPID = "position";
 	private static final String PAR_EMITTERPID = "emitter";
 	private static final String PAR_NEIGHBORSPID = "neighbors";
 	
@@ -34,7 +32,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	}
 	
 	private final int myPid;
-	private final int pidPosition;
 	private final int pidEmitter;
 	private final int pidNeighbors;
 
@@ -47,17 +44,15 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	private Pair<Integer, Long> electionId; // Id élection + Id initiateur pour ordre total
 	private long electionParent;
 	private Pair<Integer, Long> electionMax;
-	private int electionAck;
+	private Set<Long> electionAck;
 	
 	public VKT04Dynamique(String prefix) {
 		String tmp[] = prefix.split("\\.");
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
-		pidPosition = Configuration.getPid(prefix + "." + PAR_POSITIONPID);
 		pidEmitter = Configuration.getPid(prefix + "." + PAR_EMITTERPID);
 		pidNeighbors = Configuration.getPid(prefix + "." + PAR_NEIGHBORSPID);
 		myState = state.LEADER_UNKNOWN;
 		electionStarted = false;
-		electionId = new Pair<Integer, Long>(-1,-1L);
 		myLeader = -1;
 	}
 	
@@ -65,6 +60,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		VKT04Dynamique res = null;
 		try {
 			res = (VKT04Dynamique) super.clone();
+			res.electionAck = new HashSet<Long>();
+			res.electionId = new Pair<Integer, Long>(-1,-1L);
 		} catch (CloneNotSupportedException e) {
 		}
 		return res;
@@ -91,14 +88,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			
 			// Si on reçoit l'ordre de démarrer une élection
 			if(event.equals("START_ELECTION")) {
-			//	System.out.println(node.getID());
-				this.electionId = new Pair<Integer, Long>(this.electionId._1 + 1, node.getID());
-				
-				Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
-				emitter.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
-				this.electionStarted = true;
-				this.electionMax = this.myId;
-				this.myState = state.ELECTION;
+				this.startNewElection(node);
 			}
 			else System.out.println("Node " + node.getID() + " : " + event);
 		}
@@ -111,14 +101,12 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 * @param msg Message reçu
 	 */
 	private void processElectionMessage(Node node, ElectionMessage msg) {
-		Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
-		NeighborProtocol np = (NeighborProtocol)node.getProtocol(pidNeighbors);
 		
 		// Si on est déjà dans l'élection et qu'on reçoit un message correspondant à celle-ci
 		if(this.electionStarted && msg.getElectionId().equals(this.electionId)) {
 			// Si l'émetteur n'est pas notre parent alors on acquitte
 			if(msg.getIdSrc() != this.electionParent) {
-				emitter.emit(node, new AckMessage(node.getID(), msg.getIdSrc(), myPid, this.electionId, this.electionMax));
+				this.emit(node, new AckMessage(node.getID(), msg.getIdSrc(), myPid, this.electionId, this.electionMax));
 			}
 		}
 		// Sinon si l'ElectiondId du message est suppérieur alors c'est une nouvelle élection
@@ -128,21 +116,22 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			this.electionParent = msg.getIdSrc();
 			this.myState = state.LEADER_UNKNOWN;
 			this.electionStarted = true;
-			this.electionAck = 0;
+			this.electionAck.clear();
 			this.electionId = msg.getElectionId();
 			this.electionMax = this.myId;
 			this.myState = state.ELECTION;
 			
+			List<Long> neighbors = this.getNeighbors(node);
+			
 			// Diffusion à nos enfants qu'une élection est en cours
-			if(np.getNeighbors().size() > 1) {
-				for(int i = 0;i<Network.size();i++) {
-					long id = Network.get(i).getID();
+			if(neighbors.size() > 1) {
+				for(long id : neighbors) {
 					if(id != this.electionParent) {
-						emitter.emit(node, new ElectionMessage(node.getID(), id, myPid, this.electionId));
+						this.emit(node, new ElectionMessage(node.getID(), id, myPid, this.electionId));
 					}
 				}
 			} else { // Si on a pas d'enfant, on envoie un ack à notre parent
-				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+				this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 			}
 		}
 	}
@@ -153,29 +142,30 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 * @param msg Message reçu
 	 */
 	private void processAckMessage(Node node, AckMessage msg) {
-		NeighborProtocol np = (NeighborProtocol)node.getProtocol(pidNeighbors);
 		
 		// Si ce n'est pas un ACK pour l'élection en cours alors on ignore
 		if(!msg.getElectionId().equals(this.electionId))
 			return;
 		
-		Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
-		this.electionAck++;
+		List<Long> neighbors = this.getNeighbors(node);
+		
+		// On ajoute l'emetteur dans notre liste d'ACK
+		this.electionAck.add(msg.getIdSrc());
 		
 		// On garde la plus grande valeur
 		this.udpdateMaxNode(msg.getMaxNode());
 		
 		if(this.electionId._2.equals(node.getID())) { // Si on est l'initiateur de l'élection
 			// Si on a reçu un ack de tous nos enfants alors on envoie un message de leader
-			if(electionAck == np.getNeighbors().size()) {
-				emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
+			if(electionAck.equals(new HashSet<Long>(neighbors))) {
+				this.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 				this.electionDone(node);
 			}
 		}
 		else { // Si on est pas l'initiateur...
 			// .. et qu'on a reçu un ack de tous nos enfants alors on envoie un ack à notre parent
-			if(electionAck == np.getNeighbors().size() - 1) {
-				emitter.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+			if(electionAck.size() == neighbors.size() - 1) {
+				this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 			}
 		}
 	}
@@ -190,13 +180,11 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		if(!electionStarted || !msg.getElectionId().equals(this.electionId))
 			return;
 		
-		Emitter emitter = (Emitter)node.getProtocol(pidEmitter);
-		
 		// On garde la plus grande valeur
 		this.udpdateMaxNode(msg.getMaxNode());
 		
 		// On diffuse l'information sur le leader
-		emitter.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
+		this.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 		
 		// On est plus en élection
 		this.electionDone(node);
@@ -222,8 +210,15 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		else this.myState = state.LEADER_KNWON;
 		
 		this.myLeader = this.electionMax._2;
-		this.electionAck = 0;
 		this.electionStarted = false;
+	}
+	
+	private void startNewElection(Node node) {
+		this.electionId = new Pair<Integer, Long>(this.electionId._1 + 1, node.getID());
+		this.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
+		this.electionStarted = true;
+		this.electionMax = this.myId;
+		this.myState = state.ELECTION;
 	}
 
 	@Override
@@ -258,6 +253,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		res.add("Node " + this.myId._2 + " (" + this.myId._1 + ")");
 		res.add("Leader " + this.myLeader);
 		res.add("Election " + this.electionId);
+		res.add(this.electionAck.toString() + this.electionParent);
+		res.add(this.getNeighbors(host).toString());
 		return res;
 	}
 
@@ -266,17 +263,27 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.myId = id;
 	}
 	@Override
-	public void newNeighborDetected(Node host, long id_new_neighbor) {
-		System.out.println(host.getID() + " nouveau voisin : " + id_new_neighbor);
+	public void newNeighborDetected(Node node, long newNeighbor) {
+		System.out.println(node.getID() + " nouveau voisin : " + newNeighbor);
+		
+		//if(node.getID() == 7) startNewElection(node);
 		
 		// que faire pendant election ?
 		// si pas dans election ?
 	}
 
 	@Override
-	public void lostNeighborDetected(Node host, long id_lost_neighbor) {
-		System.out.println(host.getID() + " ancien voisin : " + id_lost_neighbor);
+	public void lostNeighborDetected(Node node, long lostNeighbor) {
+		System.out.println(node.getID() + " ancien voisin : " + lostNeighbor);
 		// que faire pendant election ?
 		// si pas dans election ?
+	}
+	
+	private List<Long> getNeighbors(Node node) {
+		return ((NeighborProtocol)node.getProtocol(pidNeighbors)).getNeighbors();
+	}
+	
+	private void emit(Node src, Message msg) {
+		((Emitter)src.getProtocol(pidEmitter)).emit(src, msg);
 	}
 }
