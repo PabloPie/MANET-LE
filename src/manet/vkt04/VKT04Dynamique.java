@@ -383,6 +383,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 				
 				// on le retire des ACKs en attente
 				this.electionWaitingAcks.remove(lostNeighbor);
+				// on le retire des MergeRequests en attente
+				this.electionMergeRequests.remove(lostNeighbor);
 				
 				// Si on a reçu tous nos ACKs
 				if(this.electionWaitingAcks.isEmpty()) {
