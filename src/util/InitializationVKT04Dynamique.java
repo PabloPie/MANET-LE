@@ -18,7 +18,7 @@ public class InitializationVKT04Dynamique implements Control {
 	private final int scope;
 	
 	public static final String loop_event = "LOOPEVENT";
-	private static ExtendedRandom myrand = new ExtendedRandom(4757);
+	private static ExtendedRandom myrand = new ExtendedRandom(13);
 
 	
 	public InitializationVKT04Dynamique(String prefix) {
@@ -46,10 +46,12 @@ public class InitializationVKT04Dynamique implements Control {
 			
 			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 			EDSimulator.add(0, loop_event, node, pidProtocolNeighbor);
-			EDSimulator.add(10, "START_ELECTION", node, pidProtocolElection);
+			EDSimulator.add(0, "START_ELECTION", node, pidProtocolElection);
 		}
 		// Pour simuler election avec perte de voisin non parent
-		//EDSimulator.add(3295, "START_ELECTION", Network.get(4), pidProtocolElection);
+		EDSimulator.add(8000, "START_ELECTION", Network.get(4), pidProtocolElection);
+		//EDSimulator.add(8000, "START_ELECTION", Network.get(9), pidProtocolElection);
+		EDSimulator.add(19980, "START_ELECTION", Network.get(4), pidProtocolElection);
 		return false;
 	}
 }

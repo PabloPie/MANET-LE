@@ -7,8 +7,8 @@ simulation.endtime 50000000
 init.t util.InitializationVKT04Dynamique
 
 protocol.position PositionProtocolImpl
-protocol.position.maxspeed 100
-protocol.position.minspeed 20
+protocol.position.maxspeed 35
+protocol.position.minspeed 35
 protocol.position.width 1000
 protocol.position.height 800
 protocol.position.pause 1
@@ -40,8 +40,8 @@ protocol.election.neighbors neighbors
 
 ################# Strategies Initial #######################
 
-#initial_position_strategy FullRandom
-#initial_position_strategy.positionprotocol position
+initial_position_strategy FullRandom
+initial_position_strategy.positionprotocol position
 
 #initial_position_strategy ConnectedRandom
 #initial_position_strategy.positionprotocol position
@@ -59,8 +59,8 @@ initial_position_strategy.emitter emitter
 
 ################# Strategies Next #######################
 
-#next_destination_strategy FullRandom
-#next_destination_strategy.positionprotocol position
+next_destination_strategy FullRandom
+next_destination_strategy.positionprotocol position
 
 #next_destination_strategy ConnectedRandom
 #next_destination_strategy.positionprotocol position
@@ -79,7 +79,7 @@ initial_position_strategy.emitter emitter
 #next_destination_strategy.positionprotocol position
 #next_destination_strategy.random_dest_period 10
 
-next_destination_strategy NextPingPong
-next_destination_strategy.positionprotocol position
-next_destination_strategy.emitter emitter
+#next_destination_strategy NextPingPongBlock
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.emitter emitter
 

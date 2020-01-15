@@ -49,7 +49,10 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	private Pair<Integer, Long> electionId; // Id élection + Id initiateur pour ordre total
 	private long electionParent;
 	private Pair<Integer, Long> electionMax;
-	private Set<Long> electionAck;
+	private Set<Long> electionWaitingAcks;
+	
+	private Set<Long> electionMergeRequests;
+	private Pair<Integer, Long> electionMergeMax;
 		
 	public VKT04Dynamique(String prefix) {
 		String tmp[] = prefix.split("\\.");
@@ -60,13 +63,15 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		electionStarted = false;
 		electionId = nullPair;
 		myLeader = nullPair;
+		electionParent = -1;
+		electionMergeMax = nullPair;
 	}
 	
 	public Object clone() {
 		VKT04Dynamique res = null;
 		try {
 			res = (VKT04Dynamique) super.clone();
-			res.electionAck = new HashSet<Long>();
+			res.electionWaitingAcks = new HashSet<Long>();
 		} catch (CloneNotSupportedException e) {
 		}
 		return res;
@@ -116,27 +121,31 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		}
 		// Sinon si l'ElectiondId du message est suppérieur alors c'est une nouvelle élection
 		else if(msg.getElectionId().compareTo(this.electionId) == 1) {
+			List<Long> neighbors = this.getNeighbors(node);
 			
 			// Initialisation des variables
 			this.electionParent = msg.getIdSrc();
 			this.myState = state.LEADER_UNKNOWN;
 			this.electionStarted = true;
-			this.electionAck.clear();
+			
+			this.electionMergeRequests = new HashSet<>();
+			this.electionMergeMax = nullPair;
+			this.electionWaitingAcks = new HashSet<>(neighbors);
+			this.electionWaitingAcks.remove(this.electionParent);
+			
 			this.electionId = msg.getElectionId();
 			this.electionMax = this.myId;
 			this.myState = state.ELECTION;
 			
-			List<Long> neighbors = this.getNeighbors(node);
 			
-			// Diffusion à nos enfants qu'une élection est en cours
-			if(neighbors.size() > 1) {
-				for(long id : neighbors) {
-					if(id != this.electionParent) {
-						this.emit(node, new ElectionMessage(node.getID(), id, myPid, this.electionId));
-					}
-				}
-			} else { // Si on a pas d'enfant, on envoie un ack à notre parent
+			// Si on a pas d'enfant, on ACK directement le parent
+			if(electionWaitingAcks.isEmpty()) {
 				this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+			}
+			else { // Sinon si on a des enfants on leur indique qu'il y a une nouvelle élection
+				for(long id : electionWaitingAcks) {
+					this.emit(node, new ElectionMessage(node.getID(), id, myPid, this.electionId));
+				}
 			}
 		}
 	}
@@ -155,32 +164,18 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		List<Long> neighbors = this.getNeighbors(node);
 		
 		// On ajoute l'emetteur dans notre liste d'ACK
-		this.electionAck.add(msg.getIdSrc());
+		this.electionWaitingAcks.remove(msg.getIdSrc());
 		
 		// On garde la plus grande valeur
 		this.udpdateMaxNode(msg.getMaxNode());
 		
-		if(this.electionId._2.equals(node.getID())) { // Si on est l'initiateur de l'élection
-			// Si on a reçu un ack de tous nos enfants alors on envoie un message de leader
-			if(this.electionAck.size() == neighbors.size()) {
+		if(this.electionWaitingAcks.isEmpty()) {
+			// Si on est l'initiateur ou que l'on a plus de parent
+			if(this.electionParent == -1) {
 				this.propagateMyLeader(node);
-			}
-		}
-		else { // Si on est pas l'initiateur...
-			// Si on a encore un parent...
-			if(this.electionParent != -1) {
-				// .. et qu'on a reçu un ack de tous nos enfants alors on envoie un ack à notre parent
-				if(electionAck.size() == neighbors.size() - 1) {
-					this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
-				}
-				// Sinon il faut attendre tous les ACKs
-			} else { // Si on a plus de parent...
-				// .. et qu'on a reçu un ack de tous nos enfants alors on diffuse notre leader
-				if(this.electionAck.size() == neighbors.size()) {
-					this.propagateMyLeader(node);
-				}
-				// Sinon il faut attendre tous les ACKs
-			}
+			} else {
+				this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+			}	
 		}
 	}
 	
@@ -196,7 +191,9 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		if(msg.getElectionId() == null) {
 			// Si on est dans une élection alors il fut envoyer le leader quand l'léeciton est terminée
 			if(this.electionStarted) {
-				// TODO
+				if(msg.getMaxNode().compareTo(this.electionMergeMax) == 1) {
+					this.electionMergeMax = msg.getMaxNode();
+				}
 			} else { // Je ne suis pas dans une élection
 				// Si le leader reçu est plus grand, il devient mon leader et je transmets à mes autres voisins
 				if(msg.getMaxNode().compareTo(this.electionMax) == 1) {
@@ -229,6 +226,18 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		
 		// TODO : traiter les merges en fin d'élection
 		
+		if(!this.electionMergeRequests.isEmpty()) {
+			if(this.electionMergeMax.compareTo(this.electionMax) == 1) {
+				this.electionMax = this.electionMergeMax;
+			}
+			for(long id : this.electionMergeRequests) {
+				if(neighbors.contains(id)) {
+					this.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, null, this.electionMax));
+				}
+			}
+			this.electionMergeRequests.clear();
+		}
+		
 		// On diffuse l'information sur le leader
 		this.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 		
@@ -251,7 +260,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 * Remise à zéro des variables de l'élection et mise à jour du leader
 	 * @param n Noeud ayant terminé l'élection
 	 */
-	private void electionDone(Node n) {
+	private void electionDone(Node n) {	
+		
 		if(this.electionMax._2 == n.getID()) this.myState = state.LEADER;
 		else this.myState = state.LEADER_KNWON;
 		
@@ -260,15 +270,32 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	}
 	
 	private void startNewElection(Node node) {
+		List<Long> neighbors = this.getNeighbors(node);
+		
+		this.electionParent = -1;
 		this.electionId = new Pair<Integer, Long>(this.electionId._1 + 1, node.getID());
-		this.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
-		this.electionStarted = true;
 		this.electionMax = this.myId;
-		this.myState = state.ELECTION;
-		this.myLeader = nullPair;
+		
+		if(neighbors.isEmpty()) {
+			this.myState = state.LEADER;
+			this.myLeader = this.myId;
+			this.electionStarted = false;
+		} else {
+			this.electionStarted = true;
+			this.electionWaitingAcks = new HashSet<>(neighbors);
+			this.electionMergeRequests = new HashSet<>();
+			this.electionMergeMax = nullPair;
+			this.myState = state.ELECTION;
+			this.myLeader = nullPair;
+			this.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
+		}
 	}
 	
 	private void propagateMyLeader(Node node) {
+		if(this.electionMergeMax.compareTo(this.electionMax) == 1) {
+			this.electionMax = this.electionMergeMax;
+		}
+		
 		this.emit(node, new LeaderMessage(node.getID(), Emitter.ALL, myPid, this.electionId, this.electionMax));
 		this.electionDone(node);
 	}
@@ -302,12 +329,13 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	@Override
 	public List<String> infos(Node host) {
 		List<String> res = new ArrayList<String>();
-		res.add("Node " + this.myId + " p=" + this.electionParent);
-		res.add("Leader " + this.myLeader);
-		res.add("Election " + this.electionId);
-		res.add("Max " + this.electionMax);
-		res.add("A : " + this.electionAck.toString() + this.electionParent);
+		res.add("N " + this.myId + " p=" + this.electionParent);
+		res.add("L " + this.myLeader);
+		res.add("E " + this.electionId);
+//		res.add("Max " + this.electionMax);
+		res.add("A : " + this.electionWaitingAcks.toString());
 		res.add("V : " + this.getNeighbors(host).toString());
+		res.add("R : " + this.electionMergeRequests + " " + this.electionMergeMax);
 		return res;
 	}
 
@@ -316,14 +344,15 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.myId = id;
 	}
 
+	
+	
 	@Override
 	public void newNeighborDetected(Node node, long newNeighbor) {
 		List<Long> neighbors = this.getNeighbors(node);
 		// Si on est en élection
 		if(this.electionStarted) {
-			// TODO l'élection peut se bloquer car le nouveau voisin ne va pas renvoyer un ACK mais c'est normal vu qu'il ne participe pas à l'léection + surement disctinction si onest init ou pas, parent ou pas
-			// En fait il faudrait attendre X ack pour envoyer un ACK au père où X est le nombre de voisins au début de lélection ?
-			// On peut jouer avec les paramètres de latency pour voir la diff
+			// Il faut notifier le nouveau noeud de notre leader quand l'élection est terminée
+			this.electionMergeRequests.add(newNeighbor);
 		} else { // Si c'est pas une élection
 			// Si on a un leader
 			if(!this.myLeader.equals(nullPair)) {
@@ -346,23 +375,24 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			if(this.electionParent == lostNeighbor) {
 				
 				this.electionParent = -1;
-				// Si tous les ACKs sont reçus alors on transmet un LeaderMessage et on est plus en élection
-				if(this.electionAck.size() == neighbors.size()) {
+				if(this.electionWaitingAcks.isEmpty()) {
 					this.propagateMyLeader(node);
 				}
-				// Sinon on attend tous les ACKs
 				
 			} else { // Si on a perdu un voisin non parent
 				
-				// on le retire des ACKs si présent
-				this.electionAck.remove(lostNeighbor);
-				// Si tous les ACKs sont reçus alors on transmet un LeaderMessage et on est plus en élection
-				if(this.electionAck.size() == neighbors.size()) {
-					this.propagateMyLeader(node);
-				}
-				// Sinon si notre seul voisin est notre parent, on l'ACK
-				else if(neighbors.size() == 1 && neighbors.get(0) == this.electionParent) {
-					this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+				// on le retire des ACKs en attente
+				this.electionWaitingAcks.remove(lostNeighbor);
+				
+				// Si on a reçu tous nos ACKs
+				if(this.electionWaitingAcks.isEmpty()) {
+					// Si on est initiateur ou qu'on a plus de parent on propage notre leader
+					if(this.electionParent == -1) {
+					//	this.propagateMyLeader(node);
+					} else { // Sinon on ACK notre voisin
+						this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
+					}
+					
 				}
 				// Sinon on attend tous les ACKs
 				
