@@ -390,7 +390,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 				if(this.electionWaitingAcks.isEmpty()) {
 					// Si on est initiateur ou qu'on a plus de parent on propage notre leader
 					if(this.electionParent == -1) {
-					//	this.propagateMyLeader(node);
+						this.propagateMyLeader(node);
 					} else { // Sinon on ACK notre voisin
 						this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 					}
