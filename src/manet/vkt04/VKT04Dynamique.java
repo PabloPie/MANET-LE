@@ -14,8 +14,11 @@ import manet.detection.NeighborProtocol;
 import manet.detection.NeighborhoodListener;
 import peersim.config.Configuration;
 import peersim.core.CommonState;
+import peersim.core.Network;
 import peersim.core.Node;
+import peersim.edsim.EDSimulator;
 import util.AckMessage;
+import util.BeaconMessage;
 import util.ElectionMessage;
 import util.LeaderMessage;
 import util.Message;
@@ -24,6 +27,8 @@ import util.Pair;
 public class VKT04Dynamique implements Monitorable, ElectionProtocol, NeighborhoodListener {
 	private static final String PAR_EMITTERPID = "emitter";
 	private static final String PAR_NEIGHBORSPID = "neighbors";
+	private static final String PAR_BEACON_INTERVAL = "beacon_interval";
+	private static final String PAR_BEACON_LOSS = "beacon_max_loss";
 	
 	public static final String loop_event = "LOOPEVENT";
 	
@@ -53,7 +58,13 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	
 	private Set<Long> electionMergeRequests;
 	private Pair<Integer, Long> electionMergeMax;
-		
+	
+	private int beaconTimer;
+	private int beaconLoss;
+	private long beaconLastTimestamp;
+	private final int beaconInterval;
+	private final int beaconMaxLoss;
+
 	public VKT04Dynamique(String prefix) {
 		String tmp[] = prefix.split("\\.");
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
@@ -65,6 +76,11 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		myLeader = nullPair;
 		electionParent = -1;
 		electionMergeMax = nullPair;
+		beaconInterval = Configuration.getInt(prefix + "." + PAR_BEACON_INTERVAL);
+		beaconMaxLoss = Configuration.getInt(prefix + "." + PAR_BEACON_LOSS);
+		beaconTimer = -1;
+		beaconLastTimestamp = -1;
+		beaconLoss = -1;
 	}
 	
 	public Object clone() {
@@ -79,6 +95,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 
 	@Override
 	public void processEvent(Node node, int pid, Object event) {
+				
 		if(event instanceof Message) {
 			Message msg = (Message)event;
 			
@@ -93,12 +110,18 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			
 			else if(msg instanceof LeaderMessage)
 				this.processLeaderMessage(node, (LeaderMessage)msg);
+			
+			else if(msg instanceof BeaconMessage)
+				this.processBeaconMessage(node, (BeaconMessage)msg);
 		}
 		else if(event instanceof String) {
 			
 			// Si on reçoit l'ordre de démarrer une élection
 			if(event.equals("START_ELECTION")) {
 				this.startNewElection(node);
+			}
+			else if(event.equals("LOOP_BEACON")) {
+				this.processBeaconLoop(node);
 			}
 			else System.out.println("Node " + node.getID() + " : " + event);
 		}
@@ -137,6 +160,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			this.electionMax = this.myId;
 			this.myState = state.ELECTION;
 			
+			this.resetBeaconTimer();
 			
 			// Si on a pas d'enfant, on ACK directement le parent
 			if(electionWaitingAcks.isEmpty()) {
@@ -245,6 +269,43 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.electionDone(node);
 	}
 	
+	private void processBeaconMessage(Node node, BeaconMessage msg) {
+		// Si on a reçu un Beacon concernant notre leader plus récent que le dernier reçu
+		if(msg.getLeader().equals(this.myLeader) && msg.getTimestamp() > this.beaconLastTimestamp) {
+			// On met à jour nos compteurs
+			this.beaconLastTimestamp = msg.getTimestamp();
+			this.beaconLoss = 0;
+			this.beaconTimer = this.beaconInterval;
+			
+			// On diffuse à tous nos voisins sauf l'emetteur le Beacon
+			for(long id : this.getNeighbors(node)) {
+				if(id != msg.getIdSrc()) {
+					this.emit(node, new BeaconMessage(node.getID(), id, myPid, this.myLeader, this.beaconLastTimestamp));
+				}
+			}
+		}
+	}
+	
+	private void processBeaconLoop(Node node) {
+		
+		// Si on est le leader on transmet un beacon si on a des voisins
+		if(this.myLeader.equals(this.myId)) {
+			if(!this.getNeighbors(node).isEmpty())
+				this.emit(node, new BeaconMessage(node.getID(), Emitter.ALL, myPid, this.myLeader, this.beaconLastTimestamp++));
+		}
+		else { // Si on est pas le leader
+			// Si le timer tombe à 0 on incrémente le compteur des beacons perdus
+			if(this.beaconTimer-- == 0) {
+				this.beaconTimer = this.beaconInterval;
+				// Si on a perdu trop de beacons on lance une élection
+				if(this.beaconLoss++ == this.beaconMaxLoss) {
+					this.startNewElection(node);
+				}
+			}
+		}
+		EDSimulator.add(1, "LOOP_BEACON", node, myPid);
+	}
+	
 	/**
 	 * Compare et conserve l'identifiant du noeud ayant la plus grosse valeur
 	 * @param nodeid Nouveau noeud à comparer
@@ -260,13 +321,21 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 * Remise à zéro des variables de l'élection et mise à jour du leader
 	 * @param n Noeud ayant terminé l'élection
 	 */
-	private void electionDone(Node n) {	
+	private void electionDone(Node node) {	
 		
-		if(this.electionMax._2 == n.getID()) this.myState = state.LEADER;
+		if(this.electionMax._2 == node.getID()) this.myState = state.LEADER;
 		else this.myState = state.LEADER_KNWON;
 		
 		this.myLeader = this.electionMax;
 		this.electionStarted = false;
+		
+		this.beaconLastTimestamp = -1;
+		this.beaconTimer = this.beaconInterval;
+		this.beaconLoss = 0;
+		
+		if(this.myLeader.equals(this.myId) && !this.getNeighbors(node).isEmpty()) {
+			this.emit(node, new BeaconMessage(node.getID(), Emitter.ALL, myPid, this.myLeader, this.beaconLastTimestamp++));
+		} 
 	}
 	
 	private void startNewElection(Node node) {
@@ -275,6 +344,9 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.electionParent = -1;
 		this.electionId = new Pair<Integer, Long>(this.electionId._1 + 1, node.getID());
 		this.electionMax = this.myId;
+		
+		this.resetBeaconTimer();
+		
 		
 		if(neighbors.isEmpty()) {
 			this.myState = state.LEADER;
@@ -289,6 +361,12 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			this.myLeader = nullPair;
 			this.emit(node, new ElectionMessage(node.getID(), Emitter.ALL, myPid, this.electionId));
 		}
+	}
+	
+	private void resetBeaconTimer() {
+		this.beaconTimer = this.beaconInterval;
+		this.beaconLoss = 0;
+		this.beaconLastTimestamp = -1;
 	}
 	
 	private void propagateMyLeader(Node node) {
@@ -329,13 +407,14 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	@Override
 	public List<String> infos(Node host) {
 		List<String> res = new ArrayList<String>();
-		res.add("N " + this.myId + " p=" + this.electionParent);
+		res.add("N " + this.myId);
 		res.add("L " + this.myLeader);
+//		res.add("TI " + this.beaconTimer + " TS " + this.beaconLastTimestamp + " LS " + this.beaconLoss);
 		res.add("E " + this.electionId);
 //		res.add("Max " + this.electionMax);
-		res.add("A : " + this.electionWaitingAcks.toString());
-		res.add("V : " + this.getNeighbors(host).toString());
-		res.add("R : " + this.electionMergeRequests + " " + this.electionMergeMax);
+//		res.add("A : " + this.electionWaitingAcks.toString());
+//		res.add("V : " + this.getNeighbors(host).toString());
+//		res.add("R : " + this.electionMergeRequests + " " + this.electionMergeMax);
 		return res;
 	}
 
@@ -344,8 +423,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.myId = id;
 	}
 
-	
-	
 	@Override
 	public void newNeighborDetected(Node node, long newNeighbor) {
 		List<Long> neighbors = this.getNeighbors(node);

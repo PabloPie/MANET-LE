@@ -8,13 +8,13 @@ init.t util.InitializationVKT04Dynamique
 
 protocol.position PositionProtocolImpl
 protocol.position.maxspeed 35
-protocol.position.minspeed 35
+protocol.position.minspeed 10
 protocol.position.width 1000
 protocol.position.height 800
 protocol.position.pause 1
 
 control.gmonitor GraphicalMonitor
-control.gmonitor.time_slow 0.002
+control.gmonitor.time_slow 20.002
 control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
@@ -23,7 +23,7 @@ control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
-protocol.emitter.latency 270
+protocol.emitter.latency 17
 protocol.emitter.variance 0
 protocol.emitter.scope 100
 
@@ -37,6 +37,8 @@ protocol.election VKT04Dynamique
 protocol.election.emitter emitter
 protocol.election.position position
 protocol.election.neighbors neighbors
+protocol.election.beacon_interval 50
+protocol.election.beacon_max_loss 6
 
 ################# Strategies Initial #######################
 
@@ -79,7 +81,7 @@ next_destination_strategy.positionprotocol position
 #next_destination_strategy.positionprotocol position
 #next_destination_strategy.random_dest_period 10
 
-#next_destination_strategy NextPingPongBlock
-#next_destination_strategy.positionprotocol position
-#next_destination_strategy.emitter emitter
+next_destination_strategy NextPingPong
+next_destination_strategy.positionprotocol position
+next_destination_strategy.emitter emitter
 
