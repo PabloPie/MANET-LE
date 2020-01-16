@@ -1,5 +1,5 @@
-network.size 10
-random.seed 123
+network.size 20
+random.seed 1296
 simulation.endtime 50000000
 
 #init.i util.Initialization
@@ -14,7 +14,7 @@ protocol.position.height 800
 protocol.position.pause 1
 
 control.gmonitor GraphicalMonitor
-control.gmonitor.time_slow 20.002
+control.gmonitor.time_slow 1.002
 control.gmonitor.step 1
 control.gmonitor.from 0
 control.gmonitor.positionprotocol position
@@ -25,7 +25,7 @@ control.gmonitor.emitter emitter
 protocol.emitter EmitterImpl
 protocol.emitter.latency 17
 protocol.emitter.variance 0
-protocol.emitter.scope 100
+protocol.emitter.scope 70
 
 protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 10
@@ -55,9 +55,9 @@ initial_position_strategy.positionprotocol position
 #initial_position_strategy.distance_init_min 25
 #initial_position_strategy.distance_init_max 75
 
-initial_position_strategy InitialPositionConnectedRing2
-initial_position_strategy.positionprotocol position
-initial_position_strategy.emitter emitter
+#initial_position_strategy InitialPositionConnectedRing2
+#initial_position_strategy.positionprotocol position
+#initial_position_strategy.emitter emitter
 
 ################# Strategies Next #######################
 
@@ -81,7 +81,7 @@ next_destination_strategy.positionprotocol position
 #next_destination_strategy.positionprotocol position
 #next_destination_strategy.random_dest_period 10
 
-next_destination_strategy NextPingPong
-next_destination_strategy.positionprotocol position
-next_destination_strategy.emitter emitter
+#next_destination_strategy NextPingPongBlock
+#next_destination_strategy.positionprotocol position
+#next_destination_strategy.emitter emitter
 

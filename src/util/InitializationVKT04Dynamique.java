@@ -18,7 +18,7 @@ public class InitializationVKT04Dynamique implements Control {
 	private final int scope;
 	
 	public static final String loop_event = "LOOPEVENT";
-	private static ExtendedRandom myrand = new ExtendedRandom(13);
+	private static ExtendedRandom myrand = new ExtendedRandom(17296);
 
 	
 	public InitializationVKT04Dynamique(String prefix) {
@@ -36,7 +36,7 @@ public class InitializationVKT04Dynamique implements Control {
 			pos.initialiseCurrentPosition(node);
 			
 			VKT04Dynamique vkt = (VKT04Dynamique) node.getProtocol(pidProtocolElection);
-			int r = myrand.nextInt()%20;
+			int r = myrand.nextInt()%50;
 			if(r < 0) r = -r;
 			vkt.initialiseValueId(new Pair<Integer, Long>(r, node.getID()));
 
@@ -46,12 +46,13 @@ public class InitializationVKT04Dynamique implements Control {
 			
 			EDSimulator.add(0, loop_event, node, pidProtocolPosition);
 			EDSimulator.add(0, loop_event, node, pidProtocolNeighbor);
+			EDSimulator.add(0, "LOOP_BEACON", node, pidProtocolElection);
 			EDSimulator.add(0, "START_ELECTION", node, pidProtocolElection);
 		}
 		// Pour simuler election avec perte de voisin non parent
-		EDSimulator.add(8000, "START_ELECTION", Network.get(4), pidProtocolElection);
-		//EDSimulator.add(8000, "START_ELECTION", Network.get(9), pidProtocolElection);
-		EDSimulator.add(19980, "START_ELECTION", Network.get(4), pidProtocolElection);
+	/*	EDSimulator.add(8000, "START_ELECTION", Network.get(4), pidProtocolElection);
+		EDSimulator.add(8000, "START_ELECTION", Network.get(9), pidProtocolElection);
+		EDSimulator.add(19980, "START_ELECTION", Network.get(4), pidProtocolElection);*/
 		return false;
 	}
 }
