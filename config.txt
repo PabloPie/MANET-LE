@@ -20,6 +20,14 @@ control.gmonitor.neighborprotocol neighbors
 control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
+control.cmonitor ConnexionMonitor
+control.cmonitor.from 0
+control.cmonitor.step 10
+control.cmonitor.positionprotocol position
+
+protocol.ewatcher EmitterWatcher
+protocol.ewatcher.emitter emitter
+
 protocol.emitter EmitterAlt
 protocol.emitter.latency 90
 protocol.emitter.variance 0
@@ -30,10 +38,10 @@ protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 300
 protocol.neighbors.neighbor_timer 400
 protocol.neighbors.neighborListener election
-protocol.neighbors.emitter emitter
+protocol.neighbors.emitter ewatcher
 
 protocol.election GlobalViewElection
-protocol.election.emitterprotocol emitter
+protocol.election.emitterprotocol ewatcher
 protocol.election.seed_value 0
 
 
