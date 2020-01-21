@@ -1,4 +1,5 @@
 package util;
+import manet.algorithm.election.ElectionProtocol;
 import manet.positioning.PositionProtocol;
 import manet.vkt04.VKT04Dynamique;
 import peersim.config.Configuration;
@@ -15,17 +16,14 @@ public class InitializationVKT04Dynamique implements Control {
 	private final int pidProtocolPosition;
 	private final int pidProtocolNeighbor;
 	private final int pidProtocolElection;
-	private final int scope;
 	
 	public static final String loop_event = "LOOPEVENT";
-	private static ExtendedRandom myrand = new ExtendedRandom(17296);
 
 	
 	public InitializationVKT04Dynamique(String prefix) {
 		pidProtocolPosition = Configuration.lookupPid(PAR_POSITIONPROTOCOL);
 		pidProtocolNeighbor = Configuration.lookupPid(PAR_NEIGHBORSPROTOCOL);
 		pidProtocolElection = Configuration.lookupPid(PAR_ELECTIONPROTOCOL);
-		scope = Configuration.getInt("protocol.emitter.scope");
 	}
 
 	@Override
@@ -35,10 +33,8 @@ public class InitializationVKT04Dynamique implements Control {
 			PositionProtocol pos = (PositionProtocol) node.getProtocol(pidProtocolPosition);
 			pos.initialiseCurrentPosition(node);
 			
-			VKT04Dynamique vkt = (VKT04Dynamique) node.getProtocol(pidProtocolElection);
-			int r = myrand.nextInt()%50;
-			if(r < 0) r = -r;
-			vkt.initialiseValueId(new Pair<Integer, Long>(r, node.getID()));
+			ElectionProtocol ep = (ElectionProtocol) node.getProtocol(pidProtocolElection);
+			ep.init(node.getID());
 
 		}
 		for (int i = 0; i < Network.size(); i++) {
@@ -49,10 +45,6 @@ public class InitializationVKT04Dynamique implements Control {
 			EDSimulator.add(0, "LOOP_BEACON", node, pidProtocolElection);
 			EDSimulator.add(0, "START_ELECTION", node, pidProtocolElection);
 		}
-		// Pour simuler election avec perte de voisin non parent
-	/*	EDSimulator.add(8000, "START_ELECTION", Network.get(4), pidProtocolElection);
-		EDSimulator.add(8000, "START_ELECTION", Network.get(9), pidProtocolElection);
-		EDSimulator.add(19980, "START_ELECTION", Network.get(4), pidProtocolElection);*/
 		return false;
 	}
 }

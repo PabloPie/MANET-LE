@@ -269,6 +269,11 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.electionDone(node);
 	}
 	
+	/**
+	 * Traitement à réaliser lors de la réception d'un BeaconMessage
+	 * @param node Noeud ayant reçu le message
+	 * @param msg Message reçu
+	 */
 	private void processBeaconMessage(Node node, BeaconMessage msg) {
 		// Si on a reçu un Beacon concernant notre leader plus récent que le dernier reçu
 		if(msg.getLeader().equals(this.myLeader) && msg.getTimestamp() > this.beaconLastTimestamp) {
@@ -286,6 +291,10 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		}
 	}
 	
+	/**
+	 * Traitement à réaliser pour la mise à jour du compteur de beacons 
+	 * @param node Noeud
+	 */
 	private void processBeaconLoop(Node node) {
 		
 		// Si on est le leader on transmet un beacon si on a des voisins
@@ -338,6 +347,10 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		} 
 	}
 	
+	/**
+	 * Commencer une nouvelle élection 
+	 * @param node Noeud démarrant son élection
+	 */
 	private void startNewElection(Node node) {
 		List<Long> neighbors = this.getNeighbors(node);
 		
@@ -347,7 +360,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		
 		this.resetBeaconTimer();
 		
-		
+		// Si pas de voisin alors on est leader
 		if(neighbors.isEmpty()) {
 			this.myState = state.LEADER;
 			this.myLeader = this.myId;
@@ -363,12 +376,19 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		}
 	}
 	
+	/**
+	 * Remise à zéro des variables du compteur de beacons
+	 */
 	private void resetBeaconTimer() {
 		this.beaconTimer = this.beaconInterval;
 		this.beaconLoss = 0;
 		this.beaconLastTimestamp = -1;
 	}
 	
+	/**
+	 * Diffuse un MessageLeader aux voisins
+	 * @param node Noeud propageant son leader
+	 */
 	private void propagateMyLeader(Node node) {
 		if(this.electionMergeMax.compareTo(this.electionMax) == 1) {
 			this.electionMax = this.electionMergeMax;
@@ -378,6 +398,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		this.electionDone(node);
 	}
 
+	/*** ElectionProtocol ***/
+	
 	@Override
 	public long getIDLeader() {
 		return this.myLeader._2;
@@ -387,7 +409,14 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	public int getValue() {
 		return myId._1;
 	}
-		
+
+	@Override
+	public void init(long nodeId) {
+		this.myId = new Pair<Integer, Long>( (int) nodeId, nodeId);
+	}
+	
+	/*** Monitorable ***/
+	
 	@Override
 	public int getState(Node host) {
 		switch(this.myState) {
@@ -419,9 +448,11 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	}
 
 	@Override
-	public void initialiseValueId(Pair<Integer, Long> id) {
-		this.myId = id;
+	public int nbState() {
+		return 4; // Je n'ai pas de leader, Je suis un leader, J'ai un leader, Je suis en élection
 	}
+
+	/*** NeighborhoodListener ***/
 
 	@Override
 	public void newNeighborDetected(Node node, long newNeighbor) {
@@ -443,9 +474,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	@Override
 	public void lostNeighborDetected(Node node, long lostNeighbor) {
 		List<Long> neighbors = this.getNeighbors(node);
-		
-		// TODO : que faire si on a pas de voisin ?
-		
+				
 		// Si on est en élection
 		if(this.electionStarted) {
 			// Si on a perdu notre parent
@@ -490,10 +519,21 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		}
 	}
 	
+	/*** Fonctions utiles ***/
+	
+	/**
+	 * Obtenir la liste des voisins en utilisant le NeighborsProtocol
+	 * @return Liste des voisins du noeud
+	 */
 	private List<Long> getNeighbors(Node node) {
 		return ((NeighborProtocol)node.getProtocol(pidNeighbors)).getNeighbors();
 	}
 	
+	/**
+	 * Diffuser un message en utilisant l'émitteur passez en configuration
+	 * @param src Noeud émetteur
+	 * @param msg Message à envoyer
+	 */
 	private void emit(Node src, Message msg) {
 		((Emitter)src.getProtocol(pidEmitter)).emit(src, msg);
 	}
