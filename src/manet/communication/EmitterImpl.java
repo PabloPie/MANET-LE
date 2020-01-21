@@ -5,7 +5,6 @@ import peersim.config.Configuration;
 import peersim.core.CommonState;
 import peersim.core.Network;
 import peersim.core.Node;
-import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
 import util.Message;
 
@@ -55,13 +54,27 @@ public class EmitterImpl implements Emitter {
 	}
 
 	@Override
-	public void emit(Node host, Message msg) {
+	public void emit(Node node, Message msg) {
 		int latency = this.latency;
-		for(int i = 0 ; i<Network.size();i++) {
-			if(this.variance) latency = CommonState.r.nextPoisson(this.latency);
-			EDSimulator.add(latency, msg, Network.get(i), myPid);
+		PositionProtocol positionSrc = (PositionProtocol) node.getProtocol(posprotocol);
+		if(msg.getIdDest() == Emitter.ALL) {
+			for(int i = 0 ; i<Network.size();i++) {
+				
+				if(i == node.getIndex()) continue;
+				
+				PositionProtocol positionDest = (PositionProtocol) Network.get(i).getProtocol(posprotocol);
+				if(positionSrc.getCurrentPosition().distance(positionDest.getCurrentPosition()) <= this.scope) {
+					if(this.variance) latency = CommonState.r.nextPoisson(this.latency);
+					EDSimulator.add(latency, msg, Network.get(i), myPid);
+				}
+			}
+		} else {
+			PositionProtocol positionDest = (PositionProtocol) Network.get((int)msg.getIdDest()).getProtocol(posprotocol);
+			if(positionSrc.getCurrentPosition().distance(positionDest.getCurrentPosition()) <= this.scope) {
+				if(this.variance) latency = CommonState.r.nextPoisson(this.latency);
+				EDSimulator.add(latency, msg, Network.get((int)msg.getIdDest()), myPid);
+			}
 		}
-		
 	}
 
 	@Override
