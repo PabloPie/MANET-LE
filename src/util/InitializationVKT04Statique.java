@@ -60,7 +60,7 @@ public class InitializationVKT04Statique implements Control {
 				}
 			}
 			
-			vkt.initialiseValueId(new Pair<Integer, Long>((int)(Math.random()*10), node.getID()));
+			vkt.init(node.getID());
 			vkt.initialiseNeighbors(neighbors);
 
 			EDSimulator.add(0, loop_event, node, pidProtocolPosition);

@@ -1,17 +1,17 @@
-network.size 20
-random.seed 1296
-simulation.endtime 50000000
+network.size 75
+random.seed 1
+simulation.endtime 500000000
 
 #init.i util.Initialization
 #init.t util.InitializationVKT04Statique
 init.t util.InitializationVKT04Dynamique
 
 protocol.position PositionProtocolImpl
-protocol.position.maxspeed 35
-protocol.position.minspeed 10
-protocol.position.width 1000
-protocol.position.height 800
-protocol.position.pause 1
+protocol.position.maxspeed 20
+protocol.position.minspeed 5
+protocol.position.width 1200
+protocol.position.height 1200
+protocol.position.pause 20
 
 control.gmonitor GraphicalMonitor
 control.gmonitor.time_slow 1.002
@@ -23,22 +23,27 @@ control.gmonitor.monitorableprotocol election
 control.gmonitor.emitter emitter
 
 protocol.emitter EmitterImpl
-protocol.emitter.latency 17
+protocol.emitter.latency 90
+
 protocol.emitter.variance 0
 protocol.emitter.scope 70
 
 protocol.neighbors NeighborProtocolImpl
-protocol.neighbors.heartbeat_period 10
-protocol.neighbors.neighbor_timer 12
-protocol.neighbors.emitter emitter
+protocol.neighbors.heartbeat_period 300
+protocol.neighbors.neighbor_timer 400
 protocol.neighbors.neighborListener election
+protocol.neighbors.emitter emitter
 
-protocol.election VKT04Dynamique
-protocol.election.emitter emitter
-protocol.election.position position
-protocol.election.neighbors neighbors
-protocol.election.beacon_interval 50
-protocol.election.beacon_max_loss 6
+#protocol.election VKT04Dynamique
+#protocol.election.emitter emitter
+#protocol.election.position position
+#protocol.election.neighbors neighbors
+#protocol.election.beacon_interval 50
+#protocol.election.beacon_max_loss 6
+
+protocol.election GlobalViewElection
+protocol.election.emitterprotocol emitter
+protocol.election.seed_value 0
 
 ################# Strategies Initial #######################
 
@@ -56,6 +61,7 @@ initial_position_strategy.positionprotocol position
 #initial_position_strategy.distance_init_max 75
 
 #initial_position_strategy InitialPositionConnectedRing2
+#initial_position_strategy InitialPositionConnectedRing
 #initial_position_strategy.positionprotocol position
 #initial_position_strategy.emitter emitter
 

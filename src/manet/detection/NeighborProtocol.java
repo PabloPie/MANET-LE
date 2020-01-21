@@ -12,7 +12,7 @@ public interface NeighborProtocol extends Protocol {
 
 	/* Renvoie la liste courante des Id des voisins directs */
 	public List<Long> getNeighbors();
-	
+
 	public default void initialiseNeighbors(List<Long> neighbors) {};
 	
 }
