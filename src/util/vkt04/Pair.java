@@ -1,4 +1,4 @@
-package util;
+package util.vkt04;
 
 public class Pair<A extends Comparable<A>,B extends Comparable<B>> implements Comparable<Pair<A,B>> {
 	public final A _1;

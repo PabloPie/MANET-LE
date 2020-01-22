@@ -10,11 +10,11 @@ import manet.detection.NeighborProtocol;
 import peersim.config.Configuration;
 import peersim.core.Network;
 import peersim.core.Node;
-import util.AckMessage;
-import util.ElectionMessage;
-import util.LeaderMessage;
 import util.Message;
-import util.Pair;
+import util.vkt04.AckMessage;
+import util.vkt04.ElectionMessage;
+import util.vkt04.LeaderMessage;
+import util.vkt04.Pair;
 
 public class VKT04Statique implements Monitorable, ElectionProtocol, NeighborProtocol {
 	private static final String PAR_POSITIONPID = "position";

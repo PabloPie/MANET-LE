@@ -17,7 +17,7 @@ import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
 
-public class InitializationVKT04Statique implements Control {
+public class InitializationStatique implements Control {
 	private static final String PAR_POSITIONPROTOCOL = "position";
 	private static final String PAR_NEIGHBORSPROTOCOL = "neighbors";
 	private final int pidProtocolPosition;
@@ -27,7 +27,7 @@ public class InitializationVKT04Statique implements Control {
 	public static final String loop_event = "LOOPEVENT";
 
 	
-	public InitializationVKT04Statique(String prefix) {
+	public InitializationStatique(String prefix) {
 		pidProtocolPosition = Configuration.lookupPid(PAR_POSITIONPROTOCOL);
 		pidProtocolNeighbor = Configuration.lookupPid(PAR_NEIGHBORSPROTOCOL);
 		scope = Configuration.getInt("protocol.emitter.scope");
@@ -67,9 +67,6 @@ public class InitializationVKT04Statique implements Control {
 		}
 
 		EDSimulator.add(1500, "START_ELECTION", Network.get(2), pidProtocolNeighbor);
-		EDSimulator.add(2000, "START_ELECTION", Network.get(0), pidProtocolNeighbor);
-		EDSimulator.add(2100, "START_ELECTION", Network.get(3), pidProtocolNeighbor);
-		EDSimulator.add(15000, "START_ELECTION", Network.get(1), pidProtocolNeighbor);
 		
 		return false;
 	}

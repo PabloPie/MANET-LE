@@ -2,9 +2,7 @@ network.size 75
 random.seed 1
 simulation.endtime 500000000
 
-#init.i util.Initialization
-#init.t util.InitializationVKT04Statique
-init.t util.InitializationVKT04Dynamique
+init.i util.Initialization # Ou InitializationStatique
 
 protocol.position PositionProtocolImpl
 protocol.position.maxspeed 20
@@ -34,15 +32,17 @@ protocol.neighbors.neighbor_timer 400
 protocol.neighbors.neighborListener election
 protocol.neighbors.emitter emitter
 
-#protocol.election VKT04Dynamique
-#protocol.election.emitter emitter
-#protocol.election.position position
-#protocol.election.neighbors neighbors
-#protocol.election.beacon_interval 50
-#protocol.election.beacon_max_loss 6
+# à choisir entre : GlobalViewElection, VKT04Dynamique ou VKT04Statique
+protocol.election VKT04Dynamique
+protocol.election.emitter emitter
+protocol.election.position position
+protocol.election.neighbors neighbors
 
-protocol.election GlobalViewElection
-protocol.election.emitterprotocol emitter
+# Pour VKT04 Dynamique
+protocol.election.beacon_interval 100
+protocol.election.beacon_max_loss 6
+
+# Pour GlobalView
 protocol.election.seed_value 0
 
 ################# Strategies Initial #######################

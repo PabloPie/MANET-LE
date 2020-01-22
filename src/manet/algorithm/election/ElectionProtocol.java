@@ -1,7 +1,7 @@
 package manet.algorithm.election;
 
 import peersim.edsim.EDProtocol;
-import util.Pair;
+import util.vkt04.Pair;
 
 /**
  * @author jonathan.lejeune@lip6.fr

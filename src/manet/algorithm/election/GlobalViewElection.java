@@ -19,7 +19,7 @@ import java.util.*;
 public class GlobalViewElection implements ElectionProtocol, Monitorable, NeighborhoodListener {
 
     // Protocol configuration variables
-    private static final String PAR_EMITTERPID = "emitterprotocol";
+    private static final String PAR_EMITTERPID = "emitter";
     private static final String PAR_SEED = "seed_value";
     private final int myPid;
     private int emitPid;

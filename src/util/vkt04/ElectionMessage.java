@@ -1,4 +1,6 @@
-package util;
+package util.vkt04;
+
+import util.Message;
 
 public class ElectionMessage extends Message {
 	private final Pair<Integer, Long> id;

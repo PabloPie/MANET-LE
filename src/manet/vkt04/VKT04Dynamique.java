@@ -17,12 +17,12 @@ import peersim.core.CommonState;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
-import util.AckMessage;
-import util.BeaconMessage;
-import util.ElectionMessage;
-import util.LeaderMessage;
 import util.Message;
-import util.Pair;
+import util.vkt04.AckMessage;
+import util.vkt04.BeaconMessage;
+import util.vkt04.ElectionMessage;
+import util.vkt04.LeaderMessage;
+import util.vkt04.Pair;
 
 public class VKT04Dynamique implements Monitorable, ElectionProtocol, NeighborhoodListener {
 	private static final String PAR_EMITTERPID = "emitter";
@@ -413,6 +413,9 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	@Override
 	public void init(long nodeId) {
 		this.myId = new Pair<Integer, Long>( (int) nodeId, nodeId);
+		Node node = Network.get((int)nodeId);
+		EDSimulator.add(1, "LOOP_BEACON", node, myPid);
+		EDSimulator.add(1, "START_ELECTION", node, myPid);
 	}
 	
 	/*** Monitorable ***/

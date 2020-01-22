@@ -1,9 +1,11 @@
-package util;
+package util.vkt04;
 
-public class LeaderMessage extends Message {
+import util.Message;
+
+public class AckMessage extends Message {
 	private final Pair<Integer, Long> maxNode;
 	private final Pair<Integer, Long> id;
-	public LeaderMessage(long idsrc, long iddest, int pid, Pair<Integer, Long> id, Pair<Integer, Long> maxNode) {
+	public AckMessage(long idsrc, long iddest, int pid, Pair<Integer, Long> id, Pair<Integer, Long> maxNode) {
 		super(idsrc, iddest, pid);
 		this.maxNode = maxNode;
 		this.id = id;
