@@ -10,7 +10,7 @@ import peersim.core.CommonState;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
 import peersim.edsim.EDSimulator;
-import util.vkt04.ProbeMessage;
+import util.ProbeMessage;
 
 public class NeighborProtocolImpl implements NeighborProtocol, EDProtocol {
 	
