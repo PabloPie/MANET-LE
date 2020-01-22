@@ -1,16 +1,11 @@
 package util;
-import manet.algorithm.election.ElectionInit;
-import manet.algorithm.election.GlobalViewElection;
-import manet.detection.NeighborProtocol;
+import manet.algorithm.election.ElectionProtocol;
 import manet.positioning.PositionProtocol;
 import peersim.config.Configuration;
 import peersim.core.Control;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class Initialization implements Control {
 	private static final String PAR_PROTO = "protocol";
@@ -32,8 +27,8 @@ public class Initialization implements Control {
 		for (int i = 0; i < Network.size(); i++) {
 			Node node = Network.get(i);
 
-			ElectionInit election = (ElectionInit) node.getProtocol(pidProtocolElection);
-			election.initializeValues(node.getID());
+			ElectionProtocol election = (ElectionProtocol) node.getProtocol(pidProtocolElection);
+			election.init(node.getID());
 
 			PositionProtocol pos = (PositionProtocol) node.getProtocol(pidProtocolPosition);
 			pos.initialiseCurrentPosition(node);
