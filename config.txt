@@ -47,8 +47,9 @@ protocol.election.position position
 protocol.election.neighbors neighbors
 
 # Pour VKT04 Dynamique
-protocol.election.beacon_interval 100
+protocol.election.beacon_interval 50
 protocol.election.beacon_max_loss 6
+protocol.election.beacon_leader_broadcast 10
 
 # Pour GlobalView
 protocol.election.seed_value 0
