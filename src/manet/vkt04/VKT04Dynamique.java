@@ -3,9 +3,7 @@ package manet.vkt04;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import manet.Monitorable;
 import manet.algorithm.election.ElectionProtocol;
@@ -29,6 +27,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	private static final String PAR_NEIGHBORSPID = "neighbors";
 	private static final String PAR_BEACON_INTERVAL = "beacon_interval";
 	private static final String PAR_BEACON_LOSS = "beacon_max_loss";
+	private static final String PAR_BEACON_LEADER_BROADCAST = "beacon_leader_broadcast";
 	
 	public static final String loop_event = "LOOPEVENT";
 	
@@ -64,7 +63,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	private long beaconLastTimestamp;
 	private final int beaconInterval;
 	private final int beaconMaxLoss;
-
+	private final int beaconLeaderBroadcast;
+	
 	public VKT04Dynamique(String prefix) {
 		String tmp[] = prefix.split("\\.");
 		myPid = Configuration.lookupPid(tmp[tmp.length - 1]);
@@ -78,6 +78,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		electionMergeMax = nullPair;
 		beaconInterval = Configuration.getInt(prefix + "." + PAR_BEACON_INTERVAL);
 		beaconMaxLoss = Configuration.getInt(prefix + "." + PAR_BEACON_LOSS);
+		beaconLeaderBroadcast = Configuration.getInt(prefix + "." + PAR_BEACON_LEADER_BROADCAST);
 		beaconTimer = -1;
 		beaconLastTimestamp = -1;
 		beaconLoss = -1;
@@ -275,8 +276,8 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 * @param msg Message reçu
 	 */
 	private void processBeaconMessage(Node node, BeaconMessage msg) {
-		// Si on a reçu un Beacon concernant notre leader plus récent que le dernier reçu
-		if(msg.getLeader().equals(this.myLeader) && msg.getTimestamp() > this.beaconLastTimestamp) {
+		// Si on est pas en élection et on a reçu un Beacon concernant notre leader plus récent que le dernier reçu
+		if(!this.electionStarted && msg.getLeader().equals(this.myLeader) && msg.getTimestamp() > this.beaconLastTimestamp) {
 			// On met à jour nos compteurs
 			this.beaconLastTimestamp = msg.getTimestamp();
 			this.beaconLoss = 0;
@@ -297,18 +298,23 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 	 */
 	private void processBeaconLoop(Node node) {
 		
-		// Si on est le leader on transmet un beacon si on a des voisins
-		if(this.myLeader.equals(this.myId)) {
-			if(!this.getNeighbors(node).isEmpty())
-				this.emit(node, new BeaconMessage(node.getID(), Emitter.ALL, myPid, this.myLeader, this.beaconLastTimestamp++));
-		}
-		else { // Si on est pas le leader
-			// Si le timer tombe à 0 on incrémente le compteur des beacons perdus
-			if(this.beaconTimer-- == 0) {
-				this.beaconTimer = this.beaconInterval;
-				// Si on a perdu trop de beacons on lance une élection
-				if(this.beaconLoss++ == this.beaconMaxLoss) {
-					this.startNewElection(node);
+		// Si on est pas en élection
+		if(!this.electionStarted) {
+			
+			// Si on est le leader on transmet un beacon si on a des voisins
+			if(this.myLeader.equals(this.myId)) {
+
+				if(!this.getNeighbors(node).isEmpty() && CommonState.getTime()%beaconLeaderBroadcast == 0)
+					this.emit(node, new BeaconMessage(node.getID(), Emitter.ALL, myPid, this.myLeader, this.beaconLastTimestamp++));
+			}
+			else { // Si on est pas le leader
+				// Si le timer tombe à 0 on incrémente le compteur des beacons perdus
+				if(this.beaconTimer-- == 0) {
+					this.beaconTimer = this.beaconInterval;
+					// Si on a perdu trop de beacons on lance une élection
+					if(this.beaconLoss++ == this.beaconMaxLoss) {
+						this.startNewElection(node);
+					}
 				}
 			}
 		}
@@ -476,8 +482,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 
 	@Override
 	public void lostNeighborDetected(Node node, long lostNeighbor) {
-		List<Long> neighbors = this.getNeighbors(node);
-				
+
 		// Si on est en élection
 		if(this.electionStarted) {
 			// Si on a perdu notre parent
@@ -506,18 +511,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 					
 				}
 				// Sinon on attend tous les ACKs
-				
-			}
-		} else { // Si c'est pas une élection
-			// Si on a pas de leader
-			if(this.myLeader.equals(nullPair)) {
-				// TODO ca devrait pas arriver ?
-			}
-			// Si on a perdu notre leader
-			else if(this.myLeader._2 == lostNeighbor) {
-				// TODO
-			} else { // Si on a perdu un voisin non leader
-				// TODO on n'a rien à faire ?
 			}
 		}
 	}
