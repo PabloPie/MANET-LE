@@ -18,7 +18,7 @@ print("Generating configuration files...\n")
 gen = os.system("config/genconfigs.sh")
 
 print("Compiling sources...\n")
-os.system("ant jar", stdout=subprocess.DEVNULL)
+os.system("ant jar")
 
 print("Executing simulation with configuration files:")
 print("==============================================")
@@ -36,8 +36,7 @@ vkt_stats = list(filter(lambda x: "vkt" in x, stat_files))
 aggregated_gv = pd.concat((pd.read_csv("stats/" + f) for f in gv_stats))
 aggregated_vkt = pd.concat((pd.read_csv("stats/" + f) for f in vkt_stats))
 
-x = aggregated_gv['Scope']
-y = aggregated_gv['Average']
+aggregated_gv.to_csv("gv.csv")
+aggregated_vkt.to_csv("vkt.csv")
 
-plt.plot(x,y)
-plt.show()
+print("Data exported as csv!")
