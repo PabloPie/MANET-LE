@@ -1,6 +1,6 @@
 network.size 75
 random.seed 1
-simulation.endtime 1000000000
+simulation.endtime 10000000
 
 init.i util.Initialization # Ou InitializationStatique
 

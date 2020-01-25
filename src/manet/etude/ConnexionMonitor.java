@@ -50,7 +50,7 @@ public class ConnexionMonitor implements Control{
         err = new int[Network.size()];
         
         String algo = Configuration.getString("protocol.election").toLowerCase();
-        File file = new File("stats-"+algo+"-"+scope+".csv");
+        File file = new File("stats/stats-"+algo+"-"+scope+".csv");
         System.out.println("stats-"+algo+"-"+scope+".csv");
         file.createNewFile();
         bw = new BufferedWriter(new FileWriter(file));
@@ -69,21 +69,17 @@ public class ConnexionMonitor implements Control{
         double instabiliteTotale = Arrays.stream(err).sum() / (time * Network.size() + 0.0);
         try {
 	        if(time == 0) {
-	        	bw.write("Connected components,Average,Variance,Messages sent,Messages received,Instabilite totale\n");
+	        	bw.write("Average,Variance,Messages sent,Messages received,Instabilite totale\n");
 	        }
-	        else if(time%10 == 0) {
-	        	bw.write(connexions.size() + "," +
-	        			stats.getAverage() + "," +
-	        			stats.getVar() + "," +
-	        			EmitterWatcher.msgSent+ "," +
-	        			EmitterWatcher.msgReceived+ "," +
-	        			instabiliteTotale + "\n");
-	        }
-	        if(CommonState.getTime() == CommonState.getEndTime() - 1) {
-	        	bw.flush();
-	        	bw.close();
-	        }
-	        else if(time%50000 == 0) bw.flush();
+			else if(CommonState.getTime() == CommonState.getEndTime() - 1) {
+				bw.write(stats.getAverage() + "," +
+						stats.getVar() + "," +
+						EmitterWatcher.msgSent + "," +
+						EmitterWatcher.msgReceived + "," +
+						instabiliteTotale + "\n");
+				bw.flush();
+				bw.close();
+			}
         }catch(IOException e) {
         	System.out.println(e.getStackTrace());
         	return true;
