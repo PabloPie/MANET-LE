@@ -69,10 +69,11 @@ public class ConnexionMonitor implements Control{
         double instabiliteTotale = Arrays.stream(err).sum() / (time * Network.size() + 0.0);
         try {
 	        if(time == 0) {
-	        	bw.write("Average,Variance,Messages sent,Messages received,Instabilite totale\n");
+	        	bw.write("Scope,Average,Variance,Messages sent,Messages received,Instabilite totale\n");
 	        }
 			else if(CommonState.getTime() == CommonState.getEndTime() - 1) {
-				bw.write(stats.getAverage() + "," +
+				bw.write(scope + "," +
+                        stats.getAverage() + "," +
 						stats.getVar() + "," +
 						EmitterWatcher.msgSent + "," +
 						EmitterWatcher.msgReceived + "," +
