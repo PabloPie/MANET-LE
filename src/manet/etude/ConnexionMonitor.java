@@ -11,6 +11,12 @@ import peersim.core.Network;
 import peersim.core.Node;
 import peersim.util.IncrementalStats;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+
 
 public class ConnexionMonitor implements Control{
 
@@ -29,28 +36,24 @@ public class ConnexionMonitor implements Control{
     private final int position_pid;
     private final int election_pid;
     
-    private static final Logger LOGGER = Logger.getLogger(ConnexionMonitor.class.getName());
-    FileHandler fh;
-    static{ System.setProperty("java.util.logging.SimpleFormatter.format",
-                "%5$s %n");}
-
     // stats
     private IncrementalStats stats;
     private int[] err;
+    
+    private BufferedWriter bw;
 
-    public ConnexionMonitor(String prefix) {
+    public ConnexionMonitor(String prefix) throws IOException {
         position_pid = Configuration.getPid(prefix + "." + PAR_POSITIONPID);
         election_pid = Configuration.getPid(prefix + "." + PAR_ELECTIONPID);
         scope = Configuration.getInt("protocol.emitter." + PAR_SCOPE);
         stats = new IncrementalStats();
         err = new int[Network.size()];
-        try {
-			fh = new FileHandler("stats.csv");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-//        LOGGER.setUseParentHandlers(false);
-        LOGGER.addHandler(fh);
+        
+        String algo = Configuration.getString("protocol.election").toLowerCase();
+        File file = new File("stats-"+algo+"-"+scope+".csv");
+        System.out.println("stats-"+algo+"-"+scope+".csv");
+        file.createNewFile();
+        bw = new BufferedWriter(new FileWriter(file));
     }
 
     @Override
@@ -60,18 +63,30 @@ public class ConnexionMonitor implements Control{
         Map<Long, Position> positions = PositionProtocol.getPositions(position_pid);
         Map<Integer, Set<Node>> connexions = PositionProtocol.getConnectedComponents(positions, scope);
         stats.add(connexions.size());
-        int badLeaders = getBadLeaders(connexions);
+        
+        getBadLeaders(connexions);
         
         double instabiliteTotale = Arrays.stream(err).sum() / (time * Network.size() + 0.0);
-        if(time == 0) {
-        	LOGGER.info("Connected components,Average,Variance,Messages sent,Messages received,Instabilite totale");
-        }
-        if(time%1000 == 0) {
-        	LOGGER.info(connexions.size() + "," +
-        			stats.getAverage() + "," +
-        			EmitterWatcher.msgSent+ "," +
-        			EmitterWatcher.msgReceived+ "," +
-        			instabiliteTotale);
+        try {
+	        if(time == 0) {
+	        	bw.write("Connected components,Average,Variance,Messages sent,Messages received,Instabilite totale\n");
+	        }
+	        else if(time%10 == 0) {
+	        	bw.write(connexions.size() + "," +
+	        			stats.getAverage() + "," +
+	        			stats.getVar() + "," +
+	        			EmitterWatcher.msgSent+ "," +
+	        			EmitterWatcher.msgReceived+ "," +
+	        			instabiliteTotale + "\n");
+	        }
+	        if(CommonState.getTime() == CommonState.getEndTime() - 1) {
+	        	bw.flush();
+	        	bw.close();
+	        }
+	        else if(time%50000 == 0) bw.flush();
+        }catch(IOException e) {
+        	System.out.println(e.getStackTrace());
+        	return true;
         }
         return false;
     }
