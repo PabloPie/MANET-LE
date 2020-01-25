@@ -1,6 +1,6 @@
 network.size 75
 random.seed 1
-simulation.endtime 10000000
+simulation.endtime 100
 
 init.i util.Initialization # Ou InitializationStatique
 
@@ -38,7 +38,7 @@ protocol.neighbors NeighborProtocolImpl
 protocol.neighbors.heartbeat_period 300
 protocol.neighbors.neighbor_timer 400
 protocol.neighbors.neighborListener election
-protocol.neighbors.emitter emitter
+protocol.neighbors.emitter ewatcher
 
 # à choisir entre : GlobalViewElection, VKT04Dynamique ou VKT04Statique
 protocol.election $ALGO

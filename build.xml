@@ -20,9 +20,10 @@
         <jar destfile="libs/election.jar" basedir="bin/"/>
     </target>
 
-    <target name="run" depends="jar">
+    <target name="run">
         <java classpathref="path" fork="true" classname="peersim.Simulator">
             <arg value="${confdir}/${conf}"/>
         </java>
     </target>
+
 </project>
