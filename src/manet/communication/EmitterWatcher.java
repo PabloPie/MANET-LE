@@ -9,11 +9,9 @@ import util.WatcherMessage;
 
 public class EmitterWatcher implements Emitter {
 
-
     private static final String PAR_EMITTER = "emitter";
     private final int pidemitter;
 	private final int myPid;
-
 
     public static int msgSent = 0;
     public static int msgReceived = 0;
@@ -37,13 +35,12 @@ public class EmitterWatcher implements Emitter {
 
     @Override
     public void processEvent(Node node, int pid, Object event) {
+        if(!(event instanceof ProbeMessage)) msgReceived++;
 		if(event instanceof WatcherMessage){
 		  Message msg = ((WatcherMessage) event).getMessage();
-		  if(!(msg instanceof ProbeMessage)) msgReceived++;
           EDSimulator.add(0, msg, node, msg.getPid());
         }
     }
-
 
     @Override
     public void emit(Node host, Message msg) {
