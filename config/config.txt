@@ -1,6 +1,6 @@
 network.size 75
 random.seed 1
-simulation.endtime 1000000000
+simulation.endtime 500000
 
 init.i util.Initialization # Ou InitializationStatique
 
@@ -11,14 +11,14 @@ protocol.position.width 1200
 protocol.position.height 1200
 protocol.position.pause 20
 
-#control.gmonitor GraphicalMonitor
-#control.gmonitor.time_slow 1.002
-#control.gmonitor.step 1
-#control.gmonitor.from 0
-#control.gmonitor.positionprotocol position
-#control.gmonitor.neighborprotocol neighbors
-#control.gmonitor.monitorableprotocol election
-#control.gmonitor.emitter emitter
+control.gmonitor GraphicalMonitor
+control.gmonitor.time_slow 1.002
+control.gmonitor.step 1
+control.gmonitor.from 0
+control.gmonitor.positionprotocol position
+control.gmonitor.neighborprotocol neighbors
+control.gmonitor.monitorableprotocol election
+control.gmonitor.emitter emitter
 
 control.cmonitor ConnexionMonitor
 control.cmonitor.from 0

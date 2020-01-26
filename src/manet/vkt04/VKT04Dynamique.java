@@ -149,7 +149,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			
 			// Initialisation des variables
 			this.electionParent = msg.getIdSrc();
-			this.myState = state.LEADER_UNKNOWN;
 			this.electionStarted = true;
 			
 			this.electionMergeRequests = new HashSet<>();
@@ -160,6 +159,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			this.electionId = msg.getElectionId();
 			this.electionMax = this.myId;
 			this.myState = state.ELECTION;
+			this.myLeader = nullPair;
 			
 			this.resetBeaconTimer();
 			
@@ -185,8 +185,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		// Si ce n'est pas un ACK pour l'élection en cours alors on ignore
 		if(!msg.getElectionId().equals(this.electionId))
 			return;
-		
-		List<Long> neighbors = this.getNeighbors(node);
 		
 		// On ajoute l'emetteur dans notre liste d'ACK
 		this.electionWaitingAcks.remove(msg.getIdSrc());
@@ -248,8 +246,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 		
 		// On garde la plus grande valeur
 		this.udpdateMaxNode(msg.getMaxNode());
-		
-		// TODO : traiter les merges en fin d'élection
 		
 		if(!this.electionMergeRequests.isEmpty()) {
 			if(this.electionMergeMax.compareTo(this.electionMax) == 1) {
@@ -474,8 +470,6 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 			// Si on a un leader
 			if(!this.myLeader.equals(nullPair)) {
 				this.emit(node, new LeaderMessage(node.getID(), newNeighbor, myPid, null, this.electionMax));
-			} else { // Si on a pas de leader
-				// TODO on a pas de leader ?! on lance une élection ?
 			}
 		}
 	}
@@ -505,7 +499,7 @@ public class VKT04Dynamique implements Monitorable, ElectionProtocol, Neighborho
 					// Si on est initiateur ou qu'on a plus de parent on propage notre leader
 					if(this.electionParent == -1) {
 						this.propagateMyLeader(node);
-					} else { // Sinon on ACK notre voisin
+					} else { // Sinon on ACK notre parent
 						this.emit(node, new AckMessage(node.getID(), this.electionParent, myPid, this.electionId, this.electionMax));
 					}
 					
