@@ -1,6 +1,4 @@
-package util.vkt04;
-
-import util.Message;
+package util;
 
 public class ProbeMessage extends Message {
 
